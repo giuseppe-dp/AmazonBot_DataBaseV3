@@ -43,7 +43,7 @@ import os
 
 load_dotenv()  # Carica le variabili da .env
 
-# Credenziali Amazon (sostituisci con le tue)
+# Credenziali Amazon e Telegram
 BOT_TOKEN = os.getenv("BOT_TOKEN")
 TAG = os.getenv("TAG")
 ACCESS_KEY = os.getenv("ACCESS_KEY")
@@ -112,7 +112,7 @@ async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 # /info
 async def info_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    tag = context.user_data.get('tag')
+    tag = TAG
     if tag:
         await update.message.reply_text(f"🔖 Il tuo tag affiliato corrente è: `{tag}`", parse_mode="HTML")
     else:
@@ -151,6 +151,7 @@ async def receive_asin(update: Update, context: ContextTypes.DEFAULT_TYPE):
             partner_tag=tag,
             partner_type=PartnerType.ASSOCIATES,
             marketplace="www.amazon.it",
+            merchant="Amazon",
             condition=Condition.NEW,
             item_ids=[asin],
             resources=[
@@ -174,7 +175,7 @@ async def receive_asin(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 f"<b>{title}</b>\n\n"
                 f"<b>Prezzo: {price}</b>\n\n"
                 f"🔗 <a href='{link}'>Pagina prodotto</a>\n"
-                f"⚡  <a href='{link}'>Acquisto Lampo</a> - <b>#affiliate</b>\n\n"
+                f"⚡ <a href='{link}'>Acquisto Lampo</a> - <b>#affiliate</b>\n\n"
             )
 
             # 🔗 Costruzione del link Fast Checkout
@@ -214,9 +215,16 @@ async def cancel(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text("❌ Conversazione annullata.")
     return ConversationHandler.END
 
+import nest_asyncio
+nest_asyncio.apply() # Per evitare il problema dell’event loop già in esecuzione
+
+# Avvio parallelo di bot + watcher
+async def main():
+    asyncio.create_task(check_products())  # parte il watcher
+    await app.run_polling()
 
 if __name__ == '__main__':
-    app = ApplicationBuilder().token("BOT_TOKEN").build()
+    app = ApplicationBuilder().token(BOT_TOKEN).build()
 
     conv = ConversationHandler(
         entry_points=[CommandHandler("start", start)],
@@ -230,8 +238,5 @@ if __name__ == '__main__':
     app.add_handler(CommandHandler("help", help_command))
     app.add_handler(CommandHandler("info", info_command))
 
-    # Avvio parallelo di bot + watcher
-    async def run():
-        asyncio.create_task(check_products())  # parte il watcher
-        await app.run_polling()
-    asyncio.run(run())
+    asyncio.get_event_loop().run_until_complete(main())
+    

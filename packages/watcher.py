@@ -26,28 +26,41 @@ import os
 
 load_dotenv()  # Carica le variabili da .env
 
-# Inserisci qui i tuoi dati
+# Credenziali Amazon e Telegram
 BOT_TOKEN = os.getenv("BOT_TOKEN")
 TAG = os.getenv("TAG")
 ACCESS_KEY = os.getenv("ACCESS_KEY")
 SECRET_KEY = os.getenv("SECRET_KEY")
 CHAT_ID = os.getenv("CHAT_ID")
+COUNTRY = 'IT'
+ENDPOINT = 'webservices.amazon.it'
+REGION = 'eu-west-1'
+SERVICE = 'ProductAdvertisingAPI'
+PARTNER_TYPE = 'Associates'
 
 bot = Bot(token=BOT_TOKEN)
 
 async def check_products():
     while True:
+        
+        default_api = DefaultApi(
+        access_key=ACCESS_KEY,
+        secret_key=SECRET_KEY,
+        host=ENDPOINT,
+        region=REGION
+        )
+
         try:
             with open("packages/db.json", "r") as f:
                 products = json.load(f)
 
-            api_instance = DefaultApi()
             asins = [item["asin"] for item in products]
-            request = GetItemsRequest(
+            get_items_request = GetItemsRequest(
                 partner_tag=TAG,
                 partner_type=PartnerType.ASSOCIATES,
                 condition=Condition.NEW,
                 marketplace="www.amazon.it",
+                merchant="Amazon",
                 item_ids=asins,
                 resources=[
                     GetItemsResource.OFFERS_LISTINGS_AVAILABILITY_MESSAGE,
@@ -57,19 +70,20 @@ async def check_products():
                 ]
             )
 
-            response = api_instance.get_items(
-                request=request,
-                access_key=ACCESS_KEY,
-                secret_key=SECRET_KEY,
-                region='eu-west-1'
-            )
+            response = default_api.get_items(get_items_request)
 
             changed = False
             for i, item in enumerate(response.items_result.items):
                 asin = item.asin
-                available = "Disponibile" in (item.offers.listings[0].availability.message.text if item.offers and item.offers.listings else "")
+                availability_msg = (
+                    item.offers.listings[0].availability.message if item.offers and item.offers.listings else ""
+                ).lower()
+
+                available = any(keyword in availability_msg for keyword in ["disponibile", "disponibilità", "in stock"])
+                print(f"{asin} è disponibile? {available} \n")
 
                 if available and not products[i]["last_available"]:
+
                     title = item.item_info.title.display_value if item.item_info and item.item_info.title else "Sconosciuto"
                     price = item.offers_v2.listings[0]["Price"]["Money"]["DisplayAmount"] if item.offers_v2 else "Non disponibile"
                     link = item.detail_page_url
@@ -119,4 +133,4 @@ async def check_products():
         except Exception as e:
             print("Errore generale:", e)
 
-        await asyncio.sleep(300)  # controlla ogni 5 minuti
+        await asyncio.sleep(60)  # controlla ogni 1 minuti

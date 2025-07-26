@@ -2,3 +2,4 @@ python-telegram-bot==22.1
 -e ./paapi5-python-sdk-example
 requests
 python-dotenv
+nest_asyncio
