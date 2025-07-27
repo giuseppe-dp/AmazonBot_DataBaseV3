@@ -11,6 +11,7 @@ from telegram.ext import (
 from telegram.constants import ParseMode
 
 from watcher import check_products  # importa la funzione di watcher
+from watcher import auto_reset  # importa la funzione auto reset
 
 import asyncio
 import requests
@@ -216,6 +217,7 @@ nest_asyncio.apply() # Per evitare il problema dell’event loop già in esecuzi
 # Avvio parallelo di bot + watcher
 async def main():
     asyncio.create_task(check_products())  # parte il watcher
+    asyncio.create_task(auto_reset())      # parte il reset automatico ogni 20 min
     await app.run_polling()
 
 if __name__ == '__main__':

@@ -134,4 +134,28 @@ async def check_products():
         except Exception as e:
             print("Errore generale:", e)
 
-        await asyncio.sleep(10)  # controlla ogni 10 secondi
+        await asyncio.sleep(15)  # controlla ogni 15 secondi
+
+# Reset dei prodotti ancora disponibili
+async def auto_reset():
+    while True:
+        await asyncio.sleep(20 * 60)  # 20 minuti
+        try:
+            with open("packages/db.json", "r") as f:
+                data = json.load(f)
+
+            updated = False
+            for item in data:
+                if item.get("last_available"):
+                    item["last_available"] = False
+                    updated = True
+
+            if updated:
+                with open("packages/db.json", "w") as f:
+                    json.dump(data, f, indent=2)
+                print("\n✅ Database reset ogni 20 minuti.\n")
+            else:
+                print("\nℹ️ Nessun prodotto da resettare.\n")
+
+        except Exception as e:
+            print(f"Errore durante il reset automatico: {e}")
