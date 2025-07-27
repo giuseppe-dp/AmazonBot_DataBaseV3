@@ -1,42 +1,38 @@
 [
-    {
-        "asin": "B0F54YK3DK",
-        "last_available": false
-    },
-    {
-        "asin": "B0F54TBV56",
-        "last_available": false
-    },
-    {
-        "asin": "B0F54RFPFB",
-        "last_available": false
-    },
-    {
-        "asin": "B0F5552K9Z",
-        "last_available": false
-    },
-    {
-        "asin": "B0F554MQ66",
-        "last_available": false
-    },
-    {
-        "asin": "B0C8NR3FPG",
-        "last_available": false
-    },
-    {
-        "asin": "B0DTQCBW9B",
-        "last_available": false
-    },
-    {
-        "asin": "B0FB3J9K2R",
-        "last_available": false
-    },
-    {
-        "asin": "B0FB3L1G5Y",
-        "last_available": false
-    },
-    {
-        "asin": "B0DW4F93D7",
-        "last_available": true
-    }
+  {
+    "asin": "B0F54YK3DK",
+    "last_available": false
+  },
+  {
+    "asin": "B0F54TBV56",
+    "last_available": false
+  },
+  {
+    "asin": "B0F54RFPFB",
+    "last_available": false
+  },
+  {
+    "asin": "B0F5552K9Z",
+    "last_available": false
+  },
+  {
+    "asin": "B0F554MQ66",
+    "last_available": false
+  },
+  {
+    "asin": "B0C8NR3FPG",
+    "last_available": false
+  },
+  {
+    "asin": "B0DTQCBW9B",
+    "last_available": false
+  },
+  {
+    "asin": "B0FB3J9K2R",
+    "last_available": false
+  },
+  {
+    "asin": "B0FB3L1G5Y",
+    "last_available": false
+  }
 ]
