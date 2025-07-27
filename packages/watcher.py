@@ -88,17 +88,18 @@ async def check_products():
                     price = item.offers_v2.listings[0]["Price"]["Money"]["DisplayAmount"] if item.offers_v2 else "Non disponibile"
                     link = item.detail_page_url
                     image = item.images.primary.large.url
+                    offering_id = item.offers.listings[0].id
+
+                    # 🔗 Costruzione del link Fast Checkout
+                    fast_checkout_link = f"https://www.amazon.it/gp/checkoutportal/enter-checkout.html/ref=dp_mw_buy_now?asin={asin}&offeringID={offering_id}&buyNow=1&quantity=1&tag={TAG}"
 
                     msg =  (
                         f"✅ *Disponibile ora!*\n\n"
                         f"<b>{title}</b>\n\n"
                         f"<b>Prezzo: {price}</b>\n\n"
                         f"🔗 <a href='{link}'>Pagina prodotto</a>\n"
-                        f"⚡ <a href='{link}'>Acquisto Lampo</a> - <b>#affiliate</b>\n\n"
+                        f"⚡ <a href='{fast_checkout_link}'>Acquisto Lampo</a> - <b>#affiliate</b>\n\n"
                     )
-
-                    # 🔗 Costruzione del link Fast Checkout
-                    fast_checkout_link = f"https://www.amazon.it/gp/aws/cart/add.html?ASIN1={asin}&Quantity1=1&tag={TAG}"
 
                     # Pulsanti
                     keyboard = [
@@ -133,4 +134,4 @@ async def check_products():
         except Exception as e:
             print("Errore generale:", e)
 
-        await asyncio.sleep(60)  # controlla ogni 1 minuti
+        await asyncio.sleep(10)  # controlla ogni 10 secondi

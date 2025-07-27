@@ -175,16 +175,11 @@ async def receive_asin(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 f"<b>{title}</b>\n\n"
                 f"<b>Prezzo: {price}</b>\n\n"
                 f"🔗 <a href='{link}'>Pagina prodotto</a>\n"
-                f"⚡ <a href='{link}'>Acquisto Lampo</a> - <b>#affiliate</b>\n\n"
             )
-
-            # 🔗 Costruzione del link Fast Checkout
-            fast_checkout_link = f"https://www.amazon.it/gp/aws/cart/add.html?ASIN1={asin}&Quantity1=1&tag={tag}"
 
             # Pulsanti
             keyboard = [
                 [InlineKeyboardButton("🇮🇹 ACQUISTA", url=link)],
-                [InlineKeyboardButton("⚡ Fast Checkout", url=fast_checkout_link)],
             ]
             reply_markup = InlineKeyboardMarkup(keyboard)
 
