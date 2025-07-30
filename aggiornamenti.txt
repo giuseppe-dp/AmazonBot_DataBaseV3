@@ -1,10 +1,12 @@
 ------------Aggiornamenti da fare----------
 
 
+
 ⚙️ Batching ASIN in gruppi da 10
 Descrizione:
-Attualmente il codice invia una singola richiesta PAAPI con tutti gli ASIN presenti nel file db.json. Tuttavia, Amazon PAAPI consente un massimo di 10 ASIN per richiesta.
-Superare questo limite può causare errori o inefficienze. Suddividere la lista in batch da massimo 10 elementi migliora l'affidabilità e distribuisce meglio il carico.
+Attualmente il codice invia una singola richiesta PAAPI con tutti gli ASIN presenti nel file db.json. 
+Tuttavia, Amazon PAAPI consente un massimo di 10 ASIN per richiesta. Superare questo limite può causare errori o inefficienze.
+Suddividere la lista in batch da massimo 10 elementi migliora l'affidabilità e distribuisce meglio il carico.
 
 Da fare:
 Spezzare asins = [item["asin"] for item in products] in sottoliste da 10 ASIN.
@@ -19,9 +21,10 @@ Benefici attesi:
 
 
 
-🔄 Ottimizzazione prestazioni PAAPI – Separazione dati statici e dinamici
+🔄 Ottimizzazione prestazioni PAAPI – Separazione dati statici e dinamici (+ nuovo db con SQLite)
 Descrizione:
-Modificare il sistema per utilizzare PAAPI solo per ottenere i dati dinamici (es. disponibilità e merchant), evitando di richiedere ad ogni ciclo i dati statici (come titolo, immagine, link, ecc.), che possono essere salvati in un database locale.
+Modificare il sistema per utilizzare PAAPI solo per ottenere i dati dinamici (es. disponibilità e merchant), 
+evitando di richiedere ad ogni ciclo i dati statici (come titolo, immagine, link, ecc.), che possono essere salvati in un database locale.
 
 Dettagli:
 Dati statici da salvare nel database locale: {asin, titolo, immagine, prezzo, detail_page_url}
@@ -40,3 +43,32 @@ Vantaggi attesi:
 Note aggiuntive:
 Quando un prodotto torna disponibile, usare i dati statici già presenti per inviare il messaggio Telegram.
 Aggiornare i dati statici solo se l’ASIN è nuovo, oppure ogni 24 ore o se rilevata una discrepanza.
+
+🗃️ Implementazione con Database SQLite
+Struttura del database:
+Creare un file products.db con le seguenti due tabelle:
+
+📁 static_data – Dati poco variabili
+Contiene informazioni che raramente cambiano.
+
+Campo	Tipo	Note
+asin	TEXT	Primary Key
+title	TEXT	Titolo del prodotto
+image_url	TEXT	URL immagine principale
+price	TEXT	Prezzo al momento dell’ultimo aggiornamento
+detail_page_url	TEXT	Link alla pagina prodotto Amazon
+last_updated	TEXT	Timestamp aggiornamento statico (ISO 8601)
+
+🔁 Aggiornamento: ogni 24 ore o al primo rilevamento.
+
+⚙️ dynamic_status – Dati ad alta frequenza
+Contiene lo stato attuale e soggetto a variazione.
+
+Campo	Tipo	Note
+asin	TEXT	Foreign Key da static_data
+available	INTEGER	1 = disponibile, 0 = non disponibile
+availability_type	TEXT	Tipo di disponibilità
+merchant_name	TEXT	Nome del merchant (es. "Amazon")
+last_checked	TEXT	Timestamp ultima verifica (ISO 8601)
+
+🔁 Aggiornamento: ogni ciclo di polling (es. ogni 5 secondi).
