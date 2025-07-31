@@ -1,6 +1,7 @@
 import asyncio
 import json
 from datetime import datetime
+from time import perf_counter
 
 #amazon import
 from paapi5_python_sdk.api.default_api import DefaultApi
@@ -13,11 +14,7 @@ from paapi5_python_sdk.rest import ApiException
 #telegram import
 from telegram import Bot
 from telegram import (
-    Update, InlineKeyboardButton, InlineKeyboardMarkup, InputMediaPhoto
-)
-from telegram.ext import (
-    ApplicationBuilder, CommandHandler, MessageHandler, filters,
-    ContextTypes, ConversationHandler
+    Update, InlineKeyboardButton, InlineKeyboardMarkup
 )
 from telegram.constants import ParseMode
 
@@ -72,7 +69,14 @@ async def check_products():
                 ]
             )
 
+            #check sulla durata della chiamata a paapi
+            start_time = perf_counter()
+
             response = default_api.get_items(get_items_request)
+
+            end_time = perf_counter()
+            elapsed = end_time - start_time
+
 
             changed = False
             for i, item in enumerate(response.items_result.items):
@@ -159,6 +163,9 @@ async def check_products():
                     products[i]["last_available"] = False
                     changed = True
                     print(f"❌ Non più disponibile il prodotto: {asin}\n\n")
+
+            # Stampa durata chiamata a paapi
+            print(f"\n⏱️ Tempo risposta PAAPI: \033[35m {elapsed:.2f} \033[0m secondi\n")
 
             if changed:
                 with open("packages/db.json", "w") as f:

@@ -9,7 +9,7 @@ config = {
   'url': 'URL to get it at.',
   'download_url': 'Where to download it.',
   'author_email': 'calcio.79@libero.it',
-  'version': '1.3',
+  'version': '1.4',
   'install_requires': ['python-telegram-bot==22.1','paapi5-python-sdk','requests', 'python-dotenv', 'nest_asyncio'],
   'packages': ['packages'],
   'scripts': [],

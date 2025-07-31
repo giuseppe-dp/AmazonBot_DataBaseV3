@@ -1,5 +1,7 @@
-------------Aggiornamenti da fare----------
+Tempo Risposta PAAPI : 0.23 secondi --> 0.19
 
+
+------------Aggiornamenti da fare----------
 
 
 ⚙️ Batching ASIN in gruppi da 10
