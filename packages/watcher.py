@@ -1,9 +1,8 @@
 import asyncio
-import json
-from datetime import datetime
+import sqlite3
+from datetime import datetime, timezone
 from time import perf_counter
 
-#amazon import
 from paapi5_python_sdk.api.default_api import DefaultApi
 from paapi5_python_sdk.models.condition import Condition
 from paapi5_python_sdk.models.get_items_request import GetItemsRequest
@@ -11,29 +10,26 @@ from paapi5_python_sdk.models.get_items_resource import GetItemsResource
 from paapi5_python_sdk.models.partner_type import PartnerType
 from paapi5_python_sdk.rest import ApiException
 
-#telegram import
-from telegram import Bot
-from telegram import (
-    Update, InlineKeyboardButton, InlineKeyboardMarkup
-)
+from telegram import Bot, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.constants import ParseMode
-
-from dotenv import load_dotenv
 import os
+from dotenv import load_dotenv
 
-load_dotenv()  # Carica le variabili da .env
+from database import (
+    get_asins_from_db, get_static_data, upsert_static_data, upsert_dynamic_status, connect_db
 
-# Credenziali Amazon e Telegram
+)
+
+load_dotenv()
+
 BOT_TOKEN = os.getenv("BOT_TOKEN")
 TAG = os.getenv("TAG")
 ACCESS_KEY = os.getenv("ACCESS_KEY")
 SECRET_KEY = os.getenv("SECRET_KEY")
 CHAT_ID = os.getenv("CHAT_ID")
-COUNTRY = 'IT'
-ENDPOINT = 'webservices.amazon.it'
-REGION = 'eu-west-1'
-SERVICE = 'ProductAdvertisingAPI'
-PARTNER_TYPE = 'Associates'
+ENDPOINT = "webservices.amazon.it"
+REGION = "eu-west-1"
+DB_PATH = "products.db"
 
 bot = Bot(token=BOT_TOKEN)
 
@@ -44,14 +40,26 @@ default_api = DefaultApi(
     region=REGION
 )
 
+
+def was_previously_available(asin):
+    conn = connect_db()
+    cursor = conn.cursor()
+    cursor.execute("SELECT available FROM dynamic_status WHERE asin = ?", (asin,))
+    result = cursor.fetchone()
+    conn.close()
+    return bool(result and result[0] == 1)
+
+
 async def check_products():
     while True:
-
         try:
-            with open("packages/db.json", "r") as f:
-                products = json.load(f)
+            asins = get_asins_from_db()
+            if not asins:
+                print("❌ Nessun ASIN nel database.")
+                await asyncio.sleep(20)
+                continue
 
-            asins = [item["asin"] for item in products]
+            # CHIAMATA RIDOTTA: solo dati dinamici
             get_items_request = GetItemsRequest(
                 partner_tag=TAG,
                 partner_type=PartnerType.ASSOCIATES,
@@ -61,72 +69,44 @@ async def check_products():
                 item_ids=asins,
                 resources=[
                     GetItemsResource.OFFERSV2_LISTINGS_AVAILABILITY,
-                    GetItemsResource.OFFERSV2_LISTINGS_MERCHANTINFO,
-                    GetItemsResource.OFFERSV2_LISTINGS_PRICE,
-                    GetItemsResource.ITEMINFO_TITLE,
-                    GetItemsResource.IMAGES_PRIMARY_LARGE,
-                    GetItemsResource.OFFERS_LISTINGS_AVAILABILITY_MESSAGE
+                    GetItemsResource.OFFERSV2_LISTINGS_MERCHANTINFO
                 ]
             )
 
-            #check sulla durata della chiamata a paapi
             start_time = perf_counter()
-
             response = default_api.get_items(get_items_request)
-
             end_time = perf_counter()
-            elapsed = end_time - start_time
 
-
-            changed = False
-            for i, item in enumerate(response.items_result.items):
-                
+            for item in response.items_result.items:
                 asin = item.asin
-                print(f"\n\nValuto \033[33m {asin}\033[0m")
+                available = False
+                availability_type = ""
+                merchant_name = ""
 
-                print(f"\nitem.offers: {item.offers}")
+                print(f"\nValuto \033[33m {asin}\033[0m")
 
-                # Accesso a offers_v2
-                try:
-                    offers_v2 = item.offers_v2
-                    listing = None
+                # Cerca se venduto da Amazon
+                listing = None
+                if item.offers_v2 and item.offers_v2.listings:
+                    for l in item.offers_v2.listings:
+                        merchant_info = l.get("MerchantInfo", {})
+                        merchant_name = merchant_info.get("Name", "")
+                        if merchant_name.strip().lower() == "amazon":
+                            listing = l
+                            break
 
-                    # Seleziona solo le offerte vendute da Amazon
-                    if offers_v2 and offers_v2.listings:
-                        for l in offers_v2.listings:
-                            merchant_info = l.get("MerchantInfo", {})
-                            merchant_name = merchant_info.get("Name", "")
-                            if merchant_name.strip().lower() == "amazon":
-                                listing = l
-                                break
+                if listing and "Availability" in listing:
+                    availability = listing["Availability"]
+                    availability_type = availability.get("Type", "").lower()
+                    acceptable_types = ["in_stock", "in_stock_scarce", "available_date", "leadtime"]
+                    available = availability_type in acceptable_types
 
-                    print("\nOffersV2:\n", offers_v2)
-                    print("\nListing selezionato (venduto da Amazon):\n", listing)
+                previously_available = was_previously_available(asin)
+                upsert_dynamic_status(asin, available, availability_type, merchant_name)
 
-                    available = False
-
-                    if listing and "Availability" in listing:
-                        availability = listing["Availability"]
-                        availability_type = availability.get("Type", "").lower()
-
-                        # Lista dei tipi considerati "disponibili"
-                        acceptable_types = ["in_stock", "in_stock_scarce", "available_date", "leadtime"]
-                        available = availability_type in acceptable_types
-
-                        print("\n✅ Availability Type:", availability_type)
-                    else:
-                        print("\n❌ Nessuna offerta valida venduta da Amazon o manca Availability")
-
-                except Exception as e:
-                    print(f"\n❌ Errore accesso availability: {e}\n")
-                    available = False
-
-                if available and not products[i]["last_available"]:
-                    title = item.item_info.title.display_value if item.item_info and item.item_info.title else "Sconosciuto"
-                    price = item.offers_v2.listings[0]["Price"]["Money"]["DisplayAmount"] if item.offers_v2 else "Non disponibile"
-                    image = item.images.primary.large.url if item.images and item.images.primary and item.images.primary.large else ""
-                    offering_id = item.offers.listings[0].id if item.offers else ""
-                    print(f"\noffering id: {offering_id}\n")
+                if available and not previously_available:
+                    # PRENDE I DATI STATICI DAL DB
+                    title, image, price, detail_page_url, offering_id = get_static_data(asin)
 
                     fast_checkout_link = (
                         f"https://www.amazon.it/gp/checkoutportal/enter-checkout.html/ref=dp_mw_buy_now?"
@@ -134,10 +114,10 @@ async def check_products():
                     )
 
                     msg = (
-                        f"<a href='{image}'> </a>"  # link all'immagine per forzare l'anteprima
+                        f"<a href='{image}'> </a>"
                         f"<b>{title}</b>\n\n"
                         f"<b>Prezzo: {price}</b>\n\n"
-                        f"🔗 <a href='{item.detail_page_url}'>Pagina prodotto</a>\n"
+                        f"🔗 <a href='{detail_page_url}'>Pagina prodotto</a>\n"
                         f"⚡ <a href='{fast_checkout_link}'>Acquisto Lampo</a>\n\n"
                         f"Inviate qui i vostri successi @pokedetective\n"
                     )
@@ -151,53 +131,47 @@ async def check_products():
                         chat_id=CHAT_ID,
                         text=msg,
                         parse_mode=ParseMode.HTML,
-                        disable_web_page_preview=False,  # False per mostrare l'anteprima
+                        disable_web_page_preview=False,
                         reply_markup=reply_markup
                     )
-
-                    products[i]["last_available"] = True
-                    changed = True
                     print(f"✅ Disponibile ora il prodotto: {asin}\n\n")
+                elif not available and previously_available:
+                    print(f"\n❌ {asin} non più disponibile\n")
 
-                elif not available and products[i]["last_available"]:
-                    products[i]["last_available"] = False
-                    changed = True
-                    print(f"❌ Non più disponibile il prodotto: {asin}\n\n")
-
-            # Stampa durata chiamata a paapi
-            print(f"\n⏱️ Tempo risposta PAAPI: \033[35m {elapsed:.2f} \033[0m secondi\n")
-
-            if changed:
-                with open("packages/db.json", "w") as f:
-                    json.dump(products, f, indent=4)
+            print(f"\n⏱️ Tempo risposta PAAPI: \033[35m {end_time - start_time:.2f} \033[0m secondi\n")
 
         except ApiException as e:
-            print("❌ Errore API:", e)
+            print("\n❌ Errore API:", e)
         except Exception as e:
-            print("❌ Errore generale:", e)
+            print("\n❌ Errore generale:", e)
 
-        await asyncio.sleep(5)  # controlla ogni 5 secondi
+        await asyncio.sleep(5)
 
-# Reset dei prodotti ancora disponibili
+
 async def auto_reset():
     while True:
-        await asyncio.sleep(20 * 60)  # 20 minuti
+        await asyncio.sleep(20 * 60)  # ogni 20 minuti
         try:
-            with open("packages/db.json", "r") as f:
-                data = json.load(f)
+            now = datetime.now(timezone.utc).isoformat()
+            with connect_db() as conn:
+                cur = conn.cursor()
 
-            updated = False
-            for item in data:
-                if item.get("last_available"):
-                    item["last_available"] = False
-                    updated = True
+                # Verifica e reset dei prodotti disponibili
+                cur.execute("SELECT asin FROM dynamic_status WHERE available = 1")
+                results = cur.fetchall()
 
-            if updated:
-                with open("packages/db.json", "w") as f:
-                    json.dump(data, f, indent=2)
-                print("\n✅ Database reset ogni 20 minuti.\n")
-            else:
-                print("\nℹ️ Nessun prodotto da resettare.\n")
+                if results:
+                    asins = [row[0] for row in results]
+                    cur.executemany("""
+                        UPDATE dynamic_status
+                        SET available = 0,
+                            last_checked = ?
+                        WHERE asin = ?
+                    """, [(now, asin) for asin in asins])
+                    conn.commit()
+                    print(f"\n✅ Reset {len(asins)} prodotti disponibili ogni 20 minuti.\n")
+                else:
+                    print("\nℹ️ Nessun prodotto da resettare.\n")
 
         except Exception as e:
-            print(f"Errore durante il reset automatico: {e}")
+            print(f"\n❌ Errore durante il reset automatico: {e}\n")

@@ -1,4 +1,4 @@
-Tempo Risposta PAAPI : 0.23 secondi --> 0.19
+Tempo Risposta PAAPI : 0.23 sec --> 0.19 ---> 0.15
 
 
 ------------Aggiornamenti da fare----------
@@ -44,7 +44,7 @@ Vantaggi attesi:
 
 Note aggiuntive:
 Quando un prodotto torna disponibile, usare i dati statici già presenti per inviare il messaggio Telegram.
-Aggiornare i dati statici solo se l’ASIN è nuovo, oppure ogni 24 ore o se rilevata una discrepanza.
+Aggiungere i dati statici solo se l’ASIN è nuovo
 
 🗃️ Implementazione con Database SQLite
 Struttura del database:
@@ -61,7 +61,7 @@ price	TEXT	Prezzo al momento dell’ultimo aggiornamento
 detail_page_url	TEXT	Link alla pagina prodotto Amazon
 last_updated	TEXT	Timestamp aggiornamento statico (ISO 8601)
 
-🔁 Aggiornamento: ogni 24 ore o al primo rilevamento.
+🔁 Aggiornamento: Inseriti a mano
 
 ⚙️ dynamic_status – Dati ad alta frequenza
 Contiene lo stato attuale e soggetto a variazione.
