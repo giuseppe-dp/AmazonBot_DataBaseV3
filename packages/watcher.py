@@ -55,7 +55,7 @@ async def check_products():
         try:
             asins = get_asins_from_db()
             if not asins:
-                print("❌ Nessun ASIN nel database.")
+                print("\n❌ Nessun ASIN nel database.\n")
                 await asyncio.sleep(20)
                 continue
 
@@ -85,7 +85,7 @@ async def check_products():
 
                 print(f"\nValuto \033[33m {asin}\033[0m")
 
-                # Cerca se venduto da Amazon
+                # Seleziona solo le offerte vendute da Amazon
                 listing = None
                 if item.offers_v2 and item.offers_v2.listings:
                     for l in item.offers_v2.listings:
@@ -95,11 +95,19 @@ async def check_products():
                             listing = l
                             break
 
+                print("\nOffersV2:\n", item.offers_v2)
+                print("\nListing selezionato (venduto da Amazon):\n", listing)
+
                 if listing and "Availability" in listing:
                     availability = listing["Availability"]
                     availability_type = availability.get("Type", "").lower()
+                    # Lista dei tipi considerati "disponibili"
                     acceptable_types = ["in_stock", "in_stock_scarce", "available_date", "leadtime"]
                     available = availability_type in acceptable_types
+
+                    print("\n✅ Availability Type:", availability_type)
+                else:
+                    print("\n❌ Nessuna offerta valida venduta da Amazon o manca Availability")
 
                 previously_available = was_previously_available(asin)
                 upsert_dynamic_status(asin, available, availability_type, merchant_name)
@@ -114,12 +122,12 @@ async def check_products():
                     )
 
                     msg = (
-                        f"<a href='{image}'> </a>"
+                        f"<a href='{image}'> </a>"  # link all'immagine per forzare l'anteprima
                         f"<b>{title}</b>\n\n"
                         f"<b>Prezzo: {price}</b>\n\n"
                         f"🔗 <a href='{detail_page_url}'>Pagina prodotto</a>\n"
                         f"⚡ <a href='{fast_checkout_link}'>Acquisto Lampo</a>\n\n"
-                        f"Inviate qui i vostri successi @pokedetective\n"
+                        f"Inviate qui i vostri successi @pokedetective  -  #affiliate\n"
                     )
 
                     keyboard = [
@@ -131,7 +139,7 @@ async def check_products():
                         chat_id=CHAT_ID,
                         text=msg,
                         parse_mode=ParseMode.HTML,
-                        disable_web_page_preview=False,
+                        disable_web_page_preview=False, # False per mostrare l'anteprima
                         reply_markup=reply_markup
                     )
                     print(f"✅ Disponibile ora il prodotto: {asin}\n\n")

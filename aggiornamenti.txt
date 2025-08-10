@@ -22,7 +22,7 @@ Benefici attesi:
 
 
 
-
+-FATTO-
 🔄 Ottimizzazione prestazioni PAAPI – Separazione dati statici e dinamici (+ nuovo db con SQLite)
 Descrizione:
 Modificare il sistema per utilizzare PAAPI solo per ottenere i dati dinamici (es. disponibilità e merchant), 
@@ -74,3 +74,4 @@ merchant_name	TEXT	Nome del merchant (es. "Amazon")
 last_checked	TEXT	Timestamp ultima verifica (ISO 8601)
 
 🔁 Aggiornamento: ogni ciclo di polling (es. ogni 5 secondi).
+--------
