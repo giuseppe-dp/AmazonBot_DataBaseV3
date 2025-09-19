@@ -13,7 +13,7 @@ def insert_or_update_static_data():
     title = input("Titolo: ").strip()
     image_url = input("URL immagine: ").strip()
     price = input("Prezzo: ").strip()
-    detail_page_url = input("Url prodotto: ").strip()
+    detail_page_url =  f"https://www.amazon.it/dp/{asin}/?psc=1"
     offering_id = input("Offering_id: ").strip()
 
     conn = connect_db()

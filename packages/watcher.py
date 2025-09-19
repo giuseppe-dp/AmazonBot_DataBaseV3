@@ -116,9 +116,14 @@ async def check_products():
                     # PRENDE I DATI STATICI DAL DB
                     title, image, price, detail_page_url, offering_id = get_static_data(asin)
 
-                    fast_checkout_link = (
+                    fast_checkout_link_single = (
                         f"https://www.amazon.it/gp/checkoutportal/enter-checkout.html/ref=dp_mw_buy_now?"
                         f"asin={asin}&offeringID={offering_id}&buyNow=1&quantity=1&tag={TAG}"
+                    )
+
+                    fast_checkout_link_double = (
+                        f"https://www.amazon.it/gp/checkoutportal/enter-checkout.html/ref=dp_mw_buy_now?"
+                        f"asin={asin}&offeringID={offering_id}&buyNow=1&quantity=2&tag={TAG}"
                     )
 
                     msg = (
@@ -126,12 +131,14 @@ async def check_products():
                         f"<b>{title}</b>\n\n"
                         f"<b>Prezzo: {price}</b>\n\n"
                         f"🔗 <a href='{detail_page_url}'>Pagina prodotto</a>\n"
-                        f"⚡ <a href='{fast_checkout_link}'>Acquisto Lampo</a>\n\n"
+                        f"⚡ <a href='{fast_checkout_link_single}'>Acquisto Lampo</a>\n"
+                        f"💰 <a href='{fast_checkout_link_double}'>Acquisto Lampo x2</a>\n\n"
                         f"Inviate qui i vostri successi @pokedetective  -  #affiliate\n"
                     )
 
                     keyboard = [
-                        [InlineKeyboardButton("⚡ Fast Checkout", url=fast_checkout_link)]
+                        [InlineKeyboardButton("⚡ Fast Checkout", url=fast_checkout_link_single)],
+                        [InlineKeyboardButton("💰 Fast Checkout x2", url=fast_checkout_link_double)]
                     ]
                     reply_markup = InlineKeyboardMarkup(keyboard)
 
@@ -158,7 +165,7 @@ async def check_products():
 
 async def auto_reset():
     while True:
-        await asyncio.sleep(20 * 60)  # ogni 20 minuti
+        await asyncio.sleep(1 * 60)  # ogni 20 minuti
         try:
             now = datetime.now(timezone.utc).isoformat()
             with connect_db() as conn:
