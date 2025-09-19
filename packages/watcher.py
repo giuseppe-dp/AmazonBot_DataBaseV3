@@ -165,7 +165,7 @@ async def check_products():
 
 async def auto_reset():
     while True:
-        await asyncio.sleep(1 * 60)  # ogni 20 minuti
+        await asyncio.sleep(20 * 60)  # ogni 20 minuti
         try:
             now = datetime.now(timezone.utc).isoformat()
             with connect_db() as conn:
