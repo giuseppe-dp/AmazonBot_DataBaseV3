@@ -50,6 +50,12 @@ def was_previously_available(asin):
     return bool(result and result[0] == 1)
 
 
+def chunk_list(lst, n):
+    # Divide una lista in sottoliste da massimo n elementi.
+    for i in range(0, len(lst), n):
+        yield lst[i:i+n]  # return parziale per ogni batch
+
+
 async def check_products():
     while True:
         try:
@@ -59,108 +65,118 @@ async def check_products():
                 await asyncio.sleep(20)
                 continue
 
-            # CHIAMATA RIDOTTA: solo dati dinamici
-            get_items_request = GetItemsRequest(
-                partner_tag=TAG,
-                partner_type=PartnerType.ASSOCIATES,
-                condition=Condition.NEW,
-                marketplace="www.amazon.it",
-                merchant="Amazon",
-                item_ids=asins,
-                resources=[
-                    GetItemsResource.OFFERSV2_LISTINGS_AVAILABILITY,
-                    GetItemsResource.OFFERSV2_LISTINGS_MERCHANTINFO
-                ]
-            )
+            # Divisione in batch da 10
+            for batch in chunk_list(asins, 2):
 
-            start_time = perf_counter()
-            response = default_api.get_items(get_items_request)
-            end_time = perf_counter()
-
-            for item in response.items_result.items:
-                asin = item.asin
-                available = False
-                availability_type = ""
-                merchant_name = ""
-
-                print(f"\nValuto \033[33m {asin}\033[0m")
-
-                # Seleziona solo le offerte vendute da Amazon
-                listing = None
-                if item.offers_v2 and item.offers_v2.listings:
-                    for l in item.offers_v2.listings:
-                        merchant_info = l.get("MerchantInfo", {})
-                        merchant_name = merchant_info.get("Name", "")
-                        if merchant_name.strip().lower() == "amazon":
-                            listing = l
-                            break
-
-                print("\nOffersV2:\n", item.offers_v2)
-                print("\nListing selezionato (venduto da Amazon):\n", listing)
-
-                if listing and "Availability" in listing:
-                    availability = listing["Availability"]
-                    availability_type = availability.get("Type", "").lower()
-                    # Lista dei tipi considerati "disponibili"
-                    acceptable_types = ["in_stock", "in_stock_scarce", "available_date", "leadtime"]
-                    available = availability_type in acceptable_types
-
-                    print("\n✅ Availability Type:", availability_type)
-                else:
-                    print("\n❌ Nessuna offerta valida venduta da Amazon o manca Availability")
-
-                previously_available = was_previously_available(asin)
-                upsert_dynamic_status(asin, available, availability_type, merchant_name)
-
-                if available and not previously_available:
-                    # PRENDE I DATI STATICI DAL DB
-                    title, image, price, detail_page_url, offering_id = get_static_data(asin)
-
-                    fast_checkout_link_single = (
-                        f"https://www.amazon.it/gp/checkoutportal/enter-checkout.html/ref=dp_mw_buy_now?"
-                        f"asin={asin}&offeringID={offering_id}&buyNow=1&quantity=1&tag={TAG}"
-                    )
-
-                    fast_checkout_link_double = (
-                        f"https://www.amazon.it/gp/checkoutportal/enter-checkout.html/ref=dp_mw_buy_now?"
-                        f"asin={asin}&offeringID={offering_id}&buyNow=1&quantity=2&tag={TAG}"
-                    )
-
-                    msg = (
-                        f"<a href='{image}'> </a>"  # link all'immagine per forzare l'anteprima
-                        f"<b>{title}</b>\n\n"
-                        f"<b>Prezzo: {price}</b>\n\n"
-                        f"🔗 <a href='{detail_page_url}'>Pagina prodotto</a>\n"
-                        f"⚡ <a href='{fast_checkout_link_single}'>Acquisto Lampo</a>\n"
-                        f"💰 <a href='{fast_checkout_link_double}'>Acquisto Lampo x2</a>\n\n"
-                        f"Inviate qui i vostri successi @pokedetective  -  #affiliate\n"
-                    )
-
-                    keyboard = [
-                        [InlineKeyboardButton("⚡ Fast Checkout", url=fast_checkout_link_single)],
-                        [InlineKeyboardButton("💰 Fast Checkout x2", url=fast_checkout_link_double)]
+                get_items_request = GetItemsRequest(
+                    partner_tag=TAG,
+                    partner_type=PartnerType.ASSOCIATES,
+                    condition=Condition.NEW,
+                    marketplace="www.amazon.it",
+                    merchant="Amazon",
+                    item_ids=batch,
+                    resources=[
+                        GetItemsResource.OFFERSV2_LISTINGS_AVAILABILITY,
+                        GetItemsResource.OFFERSV2_LISTINGS_MERCHANTINFO
                     ]
-                    reply_markup = InlineKeyboardMarkup(keyboard)
+                )
 
-                    await bot.send_message(
-                        chat_id=CHAT_ID,
-                        text=msg,
-                        parse_mode=ParseMode.HTML,
-                        disable_web_page_preview=False, # False per mostrare l'anteprima
-                        reply_markup=reply_markup
-                    )
-                    print(f"✅ Disponibile ora il prodotto: {asin}\n\n")
-                elif not available and previously_available:
-                    print(f"\n❌ {asin} non più disponibile\n")
+                try:
+                    start_time = perf_counter()
+                    response = default_api.get_items(get_items_request)
+                    end_time = perf_counter()
+                except ApiException as e:
+                    print(f"❌ Errore API su batch {batch}: {e}")
+                    continue  # passa al prossimo batch
 
-            print(f"\n⏱️ Tempo risposta PAAPI: \033[35m {end_time - start_time:.2f} \033[0m secondi\n")
+                # Processo ogni item nel batch
+                for item in response.items_result.items:
+                    asin = item.asin
+                    available = False
+                    availability_type = ""
+                    merchant_name = ""
+
+                    print(f"\nValuto \033[33m {asin}\033[0m")
+
+                    # Seleziona solo le offerte vendute da Amazon
+                    listing = None
+                    if item.offers_v2 and item.offers_v2.listings:
+                        for l in item.offers_v2.listings:
+                            merchant_info = l.get("MerchantInfo", {})
+                            merchant_name = merchant_info.get("Name", "")
+                            if merchant_name.strip().lower() == "amazon":
+                                listing = l
+                                break
+
+                    print("\nOffersV2:\n", item.offers_v2)
+                    print("\nListing selezionato (venduto da Amazon):\n", listing)
+
+                    if listing and "Availability" in listing:
+                        availability = listing["Availability"]
+                        availability_type = availability.get("Type", "").lower()
+                        # Lista dei tipi considerati "disponibili"
+                        acceptable_types = ["in_stock", "in_stock_scarce", "available_date", "leadtime"]
+                        available = availability_type in acceptable_types
+
+                        print("\n✅ Availability Type:", availability_type)
+                    else:
+                        print("\n❌ Nessuna offerta valida venduta da Amazon o manca Availability")
+
+                    previously_available = was_previously_available(asin)
+                    upsert_dynamic_status(asin, available, availability_type, merchant_name)
+
+                    if available and not previously_available:
+                        # PRENDE I DATI STATICI DAL DB
+                        title, image, price, detail_page_url, offering_id = get_static_data(asin)
+
+                        fast_checkout_link_single = (
+                            f"https://www.amazon.it/gp/checkoutportal/enter-checkout.html/ref=dp_mw_buy_now?"
+                            f"asin={asin}&offeringID={offering_id}&buyNow=1&quantity=1&tag={TAG}"
+                        )
+
+                        fast_checkout_link_double = (
+                            f"https://www.amazon.it/gp/checkoutportal/enter-checkout.html/ref=dp_mw_buy_now?"
+                            f"asin={asin}&offeringID={offering_id}&buyNow=1&quantity=2&tag={TAG}"
+                        )
+
+                        msg = (
+                            f"<a href='{image}'> </a>"  # link all'immagine per forzare l'anteprima
+                            f"<b>{title}</b>\n\n"
+                            f"<b>Prezzo: {price}</b>\n\n"
+                            f"🔗 <a href='{detail_page_url}'>Pagina prodotto</a>\n"
+                            f"⚡ <a href='{fast_checkout_link_single}'>Acquisto Lampo</a>\n"
+                            f"💰 <a href='{fast_checkout_link_double}'>Acquisto Lampo x2</a>\n\n"
+                            f"Inviate qui i vostri successi @pokedetective  -  #affiliate\n"
+                        )
+
+                        keyboard = [
+                            [InlineKeyboardButton("⚡ Fast Checkout", url=fast_checkout_link_single)],
+                            [InlineKeyboardButton("💰 Fast Checkout x2", url=fast_checkout_link_double)]
+                        ]
+                        reply_markup = InlineKeyboardMarkup(keyboard)
+
+                        await bot.send_message(
+                            chat_id=CHAT_ID,
+                            text=msg,
+                            parse_mode=ParseMode.HTML,
+                            disable_web_page_preview=False, # False per mostrare l'anteprima
+                            reply_markup=reply_markup
+                        )
+                        print(f"✅ Disponibile ora il prodotto: {asin}\n\n")
+                    elif not available and previously_available:
+                        print(f"\n❌ {asin} non più disponibile\n")
+
+                print(f"\n⏱️ Tempo risposta PAAPI: \033[35m {end_time - start_time:.2f} \033[0m secondi")
+                print(f"\n⮞ Batch \033[33m {batch} \033[0m completato.\n")
+
+                await asyncio.sleep(5)  # tempo prima della prossima richiesta
+
+            print("\n✔️ Batch completati.\n\n")
 
         except ApiException as e:
             print("\n❌ Errore API:", e)
         except Exception as e:
             print("\n❌ Errore generale:", e)
-
-        await asyncio.sleep(5)
 
 
 async def auto_reset():

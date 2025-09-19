@@ -3,10 +3,10 @@ Tempo Risposta PAAPI : 0.23 sec --> 0.19 ---> 0.15
 
 ------------Aggiornamenti da fare----------
 
-
+----FATTO----
 ⚙️ Batching ASIN in gruppi da 10
 Descrizione:
-Attualmente il codice invia una singola richiesta PAAPI con tutti gli ASIN presenti nel file db.json. 
+Attualmente il codice invia una singola richiesta PAAPI con tutti gli ASIN presenti nel database SQLite products.db. 
 Tuttavia, Amazon PAAPI consente un massimo di 10 ASIN per richiesta. Superare questo limite può causare errori o inefficienze.
 Suddividere la lista in batch da massimo 10 elementi migliora l'affidabilità e distribuisce meglio il carico.
 
@@ -19,10 +19,10 @@ Benefici attesi:
 ✅ Rispetto del limite API
 ✅ Minore probabilità di errori da parte di Amazon
 ✅ Migliore controllo sui retry in caso di errori parziali
+-------------
 
 
-
--FATTO-
+----FATTO----
 🔄 Ottimizzazione prestazioni PAAPI – Separazione dati statici e dinamici (+ nuovo db con SQLite)
 Descrizione:
 Modificare il sistema per utilizzare PAAPI solo per ottenere i dati dinamici (es. disponibilità e merchant), 
@@ -74,4 +74,4 @@ merchant_name	TEXT	Nome del merchant (es. "Amazon")
 last_checked	TEXT	Timestamp ultima verifica (ISO 8601)
 
 🔁 Aggiornamento: ogni ciclo di polling (es. ogni 5 secondi).
---------
+-----------

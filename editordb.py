@@ -8,12 +8,21 @@ def connect_db():
     return conn
 
 
+def count_asins():
+    """Conta quanti ASIN sono presenti nella tabella static_data."""
+    with connect_db() as conn:
+        cur = conn.cursor()
+        cur.execute("SELECT COUNT(*) FROM static_data")
+        count = cur.fetchone()[0]
+    return count
+
+
 def insert_or_update_static_data():
     asin = input("Inserisci ASIN: ").strip()
     title = input("Titolo: ").strip()
     image_url = input("URL immagine: ").strip()
     price = input("Prezzo: ").strip()
-    detail_page_url =  f"https://www.amazon.it/dp/{asin}/?psc=1"
+    detail_page_url =  f"https://www.amazon.it/dp/{asin}/?tag=ggph-21&psc=1"
     offering_id = input("Offering_id: ").strip()
 
     conn = connect_db()
@@ -67,7 +76,8 @@ def view_all_products():
     if not rows:
         print("\nℹ️ Nessun prodotto nel database.\n")
     else:
-        print("\n📦 Prodotti nel database:\n")
+        total_asins = count_asins()
+        print(f"\n📦 {total_asins} prodotti nel database:\n")
         for row in rows:
             asin, title, image_url, price, detail_page_url, offering_id, last_updated = row
             print(f"- ASIN: {asin}")
