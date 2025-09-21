@@ -16,7 +16,7 @@ import os
 from dotenv import load_dotenv
 
 from database import (
-    get_asins_from_db, get_static_data, upsert_static_data, upsert_dynamic_status, connect_db
+    get_asins_from_db, get_static_data, upsert_static_data, upsert_dynamic_status, connect_db, get_active_asins
 
 )
 
@@ -59,14 +59,14 @@ def chunk_list(lst, n):
 async def check_products():
     while True:
         try:
-            asins = get_asins_from_db()
+            asins = get_active_asins()
             if not asins:
                 print("\n❌ Nessun ASIN nel database.\n")
                 await asyncio.sleep(20)
                 continue
 
             # Divisione in batch da 10
-            for batch in chunk_list(asins, 2):
+            for batch in chunk_list(asins, 10):
 
                 get_items_request = GetItemsRequest(
                     partner_tag=TAG,

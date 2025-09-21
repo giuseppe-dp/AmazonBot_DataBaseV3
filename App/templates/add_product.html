@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <title>Aggiungi Prodotto</title>
+    <style>
+        form { max-width: 500px; margin: 20px auto; display: flex; flex-direction: column; }
+        label { margin-top: 10px; font-weight: bold; }
+        input { padding: 8px; margin-top: 5px; border: 1px solid #ccc; border-radius: 4px; }
+        button { margin-top: 20px; padding: 10px; background: #28a745; color: white; border: none; border-radius: 4px; cursor: pointer; }
+        button:hover { background: #218838; }
+        a { display: block; margin-top: 15px; text-align: center; text-decoration: none; color: #007bff; }
+    </style>
+</head>
+<body>
+    <h1 style="text-align:center;">➕ Aggiungi Prodotto</h1>
+    <form method="POST">
+        <label for="asin">ASIN</label>
+        <input type="text" name="asin" required>
+
+        <label for="title">Titolo</label>
+        <input type="text" name="title" required>
+
+        <label for="image_url">URL Immagine</label>
+        <input type="text" name="image_url" required>
+
+        <label for="price">Prezzo</label>
+        <input type="text" name="price" required>
+
+        <label for="offering_id">Offering ID</label>
+        <input type="text" name="offering_id" required>
+
+        <button type="submit">Salva Prodotto</button>
+    </form>
+    <a href="{{ url_for('index') }}">⬅️ Torna alla lista</a>
+</body>
+</html>

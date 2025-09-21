@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <title>Gestione Database Prodotti</title>
+    <style>
+        table { width: 100%; border-collapse: collapse; margin: 20px 0; }
+        th, td { padding: 8px 12px; border: 1px solid #ccc; text-align: left; }
+        th { background: #eee; }
+        a { padding: 5px 10px; background: #007bff; color: white; text-decoration: none; border-radius: 4px; }
+        a.remove { background: red; }
+        a.add { padding: 10px 10px; background: none; color: #000000; text-decoration: none; border-radius: 4px;  }
+    </style>
+</head>
+<body>
+    <h1>📦 Gestione Prodotti Amazon</h1>
+    <table>
+        <tr>
+            <th>ASIN</th>
+            <th>Titolo</th>
+            <th>Prezzo</th>
+            <th>Attivo nel Bot</th>
+            <th>Azioni</th>
+        </tr>
+        {% for p in products %}
+        <tr>
+            <td>{{ p["asin"] }}</td>
+            <td>{{ p["title"] }}</td>
+            <td>{{ p["price"] }}</td>
+            <td>
+                {% if p["asin"] in active_asins %}
+                    ✅
+                {% else %}
+                    ❌
+                {% endif %}
+            </td>
+            <td>
+                {% if p["asin"] in active_asins %}
+                    <a class="remove" href="{{ url_for('remove_from_bot', asin=p['asin']) }}">Rimuovi dal Bot</a>
+                {% else %}
+                    <a href="{{ url_for('add_to_bot', asin=p['asin']) }}">Aggiungi al Bot</a>
+                {% endif %}
+                <a class="remove" href="{{ url_for('delete_product', asin=p['asin']) }}">Elimina Prodotto</a>
+            </td>
+        </tr>
+        {% endfor %}
+    </table>
+    <a class="add" href="{{ url_for('add_product') }}">➕ Aggiungi nuovo prodotto</a>
+</body>
+</html>

@@ -33,6 +33,14 @@ def init_db():
                 FOREIGN KEY (asin) REFERENCES static_data(asin) ON DELETE CASCADE
             )
         """)
+        # Tabella prodotti usati dal bot
+        cur.execute("""
+            CREATE TABLE IF NOT EXISTS bot_asins (
+                asin TEXT PRIMARY KEY,
+                FOREIGN KEY (asin) REFERENCES static_data(asin)
+                FOREIGN KEY (asin) REFERENCES static_data(asin) ON DELETE CASCADE
+            )
+        """)
         conn.commit()
 
 
@@ -40,6 +48,15 @@ def get_asins_from_db():
     conn = connect_db()
     cursor = conn.cursor()
     cursor.execute("SELECT asin FROM static_data")
+    asins = [row[0] for row in cursor.fetchall()]
+    conn.close()
+    return asins
+
+
+def get_active_asins():
+    conn = connect_db()
+    cursor = conn.cursor()
+    cursor.execute("SELECT asin FROM bot_asins")
     asins = [row[0] for row in cursor.fetchall()]
     conn.close()
     return asins
@@ -95,7 +112,33 @@ def needs_static_update(asin):
             return True
         last_updated = datetime.fromisoformat(result[0])
         return datetime.now(timezone.utc) - last_updated > timedelta(hours=24)
+    
+
+def add_to_bot(asin):
+    # Aggiunge un ASIN alla lista dei prodotti monitorati dal bot
+    with connect_db() as conn:
+        cur = conn.cursor()
+        try:
+            cur.execute("INSERT INTO bot_asins (asin) VALUES (?)", (asin,))
+            conn.commit()
+            print(f"✅ ASIN {asin} aggiunto alla lista del bot.")
+        except sqlite3.IntegrityError:
+            print(f"⚠️ ASIN {asin} già presente nella lista del bot.")
+
+
+def remove_from_bot(asin):
+    # Rimuove un ASIN dalla lista dei prodotti monitorati dal bot
+    with connect_db() as conn:
+        cur = conn.cursor()
+        cur.execute("DELETE FROM bot_asins WHERE asin = ?", (asin,))
+        conn.commit()
+        if cur.rowcount > 0:
+            print(f"❌ ASIN {asin} rimosso dalla lista del bot.")
+        else:
+            print(f"⚠️ ASIN {asin} non trovato nella lista del bot.")
 
 
 if __name__ == '__main__':
     init_db()
+
+    print("📌 Lista ASIN attivi nel bot:", get_active_asins())
