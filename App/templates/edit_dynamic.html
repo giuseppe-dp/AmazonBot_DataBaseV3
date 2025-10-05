@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <title>Modifica dati dinamici</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        form { max-width: 700px; margin: auto; }
+        label { display: block; margin-top: 10px; font-weight: bold; }
+        input[type="text"] { width: 100%; padding: 8px; margin-top: 5px; box-sizing: border-box; }
+        button { margin-top: 15px; padding: 10px 16px; background: #4CAF50; color: white; border: none; cursor: pointer; }
+        button:hover { background: #45a049; }
+        .note { font-size: 0.9em; color: #555; margin-top: 8px; }
+        a.page { margin: 10px; text-align: center; text-decoration: none; color: #007bff; }
+    </style>
+</head>
+<body>
+    <h2>Modifica dati dinamici per {{ product["asin"] }}</h2>
+
+    <p class="note">Lascia un campo vuoto per mantenerne il valore corrente (non verrà modificato).</p>
+
+    <form method="POST">
+        <label for="image_url">Image URL</label>
+        <input type="text" name="image_url" value="{{ product['image_url'] or '' }}" placeholder="https://...">
+
+        <label for="price">Price</label>
+        <input type="text" name="price" value="{{ product['price'] or '' }}" placeholder="es. 19.99 €">
+
+        <label for="detail_page_url">Detail page URL</label>
+        <input type="text" name="detail_page_url" value="{{ product['detail_page_url'] or '' }}" placeholder="https://www.amazon.it/dp/...">
+
+        <label for="offering_id">Offering ID</label>
+        <input type="text" name="offering_id" value="{{ product['offering_id'] or '' }}" placeholder="offering id">
+
+        <button type="submit">💾 Salva modifiche</button>
+    </form>
+
+    <p style="text-align:center; margin-top:20px;">
+        <a class="page" href="{{ url_for('index') }}">⬅️ Torna alla lista</a>
+        <a class="page" href="{{ url_for('show_product', asin=product['asin']) }}">🔎 Vai ai dettagli</a>
+    </p>
+</body>
+</html>
+

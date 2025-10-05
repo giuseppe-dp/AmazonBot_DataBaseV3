@@ -16,9 +16,11 @@ import os
 from dotenv import load_dotenv
 
 from database import (
-    get_asins_from_db, get_static_data, upsert_static_data, upsert_dynamic_status, connect_db, get_active_asins
+    get_static_data, get_dynamic_data, upsert_scraping, upsert_dynamic_status, connect_db, get_active_asins, get_offering_id
 
 )
+
+from scraping import scraping_data
 
 load_dotenv()
 
@@ -126,8 +128,15 @@ async def check_products():
                     upsert_dynamic_status(asin, available, availability_type, merchant_name)
 
                     if available and not previously_available:
+                        offering_id = get_offering_id(asin)
+
+                        if offering_id in ("None", ""):
+                            data = asyncio.run(scraping_data(asin))
+                            upsert_scraping(asin, data["image_url"], data["price"], data["offering_id"],)
+
                         # PRENDE I DATI STATICI DAL DB
-                        title, image, price, detail_page_url, offering_id = get_static_data(asin)
+                        title = get_static_data(asin)
+                        image, price, detail_page_url, offering_id = get_dynamic_data(asin)
 
                         fast_checkout_link_single = (
                             f"https://www.amazon.it/gp/checkoutportal/enter-checkout.html/ref=dp_mw_buy_now?"
@@ -145,7 +154,6 @@ async def check_products():
                             f"<b>Prezzo: {price}</b>\n\n"
                             f"🔗 <a href='{detail_page_url}'>Pagina prodotto</a>\n"
                             f"⚡ <a href='{fast_checkout_link_single}'>Acquisto Lampo</a>\n"
-                            f"💰 <a href='{fast_checkout_link_double}'>Acquisto Lampo x2</a>\n\n"
                             f"Inviate qui i vostri successi @pokedetective  -  #affiliate\n"
                         )
 
@@ -169,7 +177,7 @@ async def check_products():
                 print(f"\n⏱️ Tempo risposta PAAPI: \033[35m {end_time - start_time:.2f} \033[0m secondi")
                 print(f"\n⮞ Batch \033[33m {batch} \033[0m completato.\n")
 
-                await asyncio.sleep(5)  # tempo prima della prossima richiesta
+                await asyncio.sleep(2)  # tempo prima della prossima richiesta
 
             print("\n✔️ Batch completati.\n\n")
 

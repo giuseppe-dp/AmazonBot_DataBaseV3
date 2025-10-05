@@ -3,3 +3,5 @@ python-telegram-bot==22.1
 requests
 python-dotenv
 nest_asyncio
+flask
+playwright
