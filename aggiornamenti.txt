@@ -1,2 +1,58 @@
 ------------Aggiornamenti da fare----------
 
+OK 1) Gestione TooManyRequests — mettere in pausa e riprovare dopo 1 ora
+
+Cosa fare:
+Se una chiamata alla PA-API fallisce per throttling (HTTP 429 o errore TooManyRequests), il bot deve mettere in pausa tutte le chiamate API per 1 ora. Questo significa impostare un flag globale paapi_paused = True, poi await asyncio.sleep(3600) e infine resettare il flag.
+
+Perché:
+Ripetere tentativi immediati quando l’API throttla peggiora la situazione e può portare a ban o a ulteriori ritardi. Una pausa lunga dà tempo alla quota a rigenerarsi.
+
+Dettagli operativi:
+Usare un wrapper safe_paapi_call() che intercetta ApiException.
+Se riceve 429 → chiamare handle_too_many_requests() che: imposta flag, scrive log, dorme 1 ora, ripristina flag.
+
+
+2) Fasce orarie di lavoro (work slots) — dorme fuori fascia, lavora dentro fascia
+
+Cosa fare:
+Aggiungere una configurazione con work_start e work_end (es. "08:00", "20:00") e un controllo che, all’inizio di ogni ciclo, verifichi se l’orario corrente è dentro la fascia.
+Se fuori fascia, calcola quanti secondi mancano al prossimo inizio e await asyncio.sleep(secs). Supportare timezone (Europe/Rome) e fasce che attraversano la mezzanotte.
+
+Perché:
+Permette di limitare l’attività del bot a ore utili (es. giorno, quando gli utenti sono attivi) e ridurre consumo API/risorse fuori orario.
+
+Dettagli operativi:
+Implementare in_work_window(start, end, tz) e seconds_to_next_start(start, tz).
+Prima di fare qualsiasi chiamata PAAPI, controllare la fascia: se fuori, dormire fino a work_start.
+Rendere la fascia modificabile (file di config ricaricabile o endpoint web).
+
+Cosa controllare / test:
+Testare fasce che passano la mezzanotte (es. 22:00–06:00).
+
+
+3) Interfaccia web e DB su stesso Raspberry
+
+Cosa deve fare la web UI
+La pagina/pulsanti devono poter:
+Avviare/fermare il bot (systemd service o task process locale).
+Eseguire manutenzioni sul DB SQLite.
+Mostrare lo stato attuale (bot running / bot stopped, DB size, last backup time).
+
+Permessi e utente:
+eseguire bot e webserver come lo stesso utente o garantire che entrambi abbiano gli stessi permessi sul file DB.
+evitare che webserver operi come root.
+
+
+4) Rotazione di più chiavi/tag affiliati (uno alla volta, non in parallelo)
+
+Cosa fare:
+Gestire una lista persistente di credenziali {access_key, secret, tag} in un file JSON o DB e mantenere un indice current_cred_index persistente.
+Prima di ogni gruppo di chiamate o dopo N chiamate, cambiare credenziale (round-robin). Se una credenziale subisce throttling, impostare un cooldown_until e saltarla finché non scade.
+
+Dettagli operativi:
+File creds.json con lista di credenziali.
+Funzioni load_creds(), load_index(), save_index().
+Policy di rotazione: per esempio, cambia cred dopo calls_per_credential = 500 richieste o dopo T minuti.
+Ricreare l’istanza DefaultApi con la credenziale selezionata prima di effettuare la chiamata.
+Se ricevi 429 con una cred, impostare cooldown_until = now + cooldown_seconds e registrarla come temporaneamente esclusa.

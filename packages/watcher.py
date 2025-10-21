@@ -58,17 +58,34 @@ def chunk_list(lst, n):
         yield lst[i:i+n]  # return parziale per ogni batch
 
 
+# === CONTATORE RICHIESTE PAAPI ===
+paapi_request_count = 0
+paapi_request_window_start = datetime.now()
+PAAPI_LIMIT_PER_HOUR = 3600
+PAAPI_LIMIT_PER_DAY = 8640   # da usare se voglio impostare qualche limite di richieste
+LOG_FILE = "paapi_log.txt"
+
+
+def write_log(message: str):
+    # Scrive una riga nel file di log con timestamp.
+    timestamp = datetime.now().strftime("[%Y-%m-%d %H:%M:%S]")
+    with open(LOG_FILE, "a", encoding="utf-8") as f:
+        f.write(f"{timestamp} {message}\n")
+
+
 async def check_products():
+    global paapi_request_count, paapi_request_window_start
+
     while True:
         try:
             asins = get_active_asins()
             if not asins:
                 print("\n❌ Nessun ASIN nel database.\n")
-                await asyncio.sleep(20)
+                await asyncio.sleep(60)
                 continue
 
-            # Divisione in batch da 10
-            for batch in chunk_list(asins, 10):
+            # Divisione in batch
+            for batch in chunk_list(asins, 9):
 
                 get_items_request = GetItemsRequest(
                     partner_tag=TAG,
@@ -87,9 +104,52 @@ async def check_products():
                     start_time = perf_counter()
                     response = default_api.get_items(get_items_request)
                     end_time = perf_counter()
+
+                    # Count richieste
+                    paapi_request_count += 1
+                    elapsed_window = (datetime.now() - paapi_request_window_start).total_seconds()
+
+                    # Reset automatico ogni ora
+                    if elapsed_window > 3600:
+                        msg = f"Nell'ultima ora sono state fatte {paapi_request_count} chiamate PAAPI."
+                        print(f"\n🕒 {msg}\n")
+                        write_log(msg)
+
+                        # reset per l’ora successiva
+                        paapi_request_count = 1
+                        paapi_request_window_start = datetime.now()
+
+                    # Avviso ogni tot chiamate
+                    if paapi_request_count % 1000 == 0:
+                        print(f"\n⚠️ Hai già fatto {paapi_request_count} chiamate PAAPI in questa sessione.\n")
+
                 except ApiException as e:
-                    print(f"❌ Errore API su batch {batch}: {e}")
-                    continue  # passa al prossimo batch
+                    error_message = str(e)
+
+                    # Rileva errore "TooManyRequests" o simile
+                    if "TooManyRequests" in error_message or "429" in error_message:
+                        msg = (
+                            f"🚫 Errore Too Many Requests su batch {batch}. "
+                            f"Messa in pausa per 1 ora\n"
+                            f"Sono state fatte {paapi_request_count} chiamate PAAPI prima dell'errore.\n"
+                        )
+                        print(msg)
+                        write_log(msg)
+
+                        # Pausa forzata di 1 ora
+                        await asyncio.sleep(3600)
+
+                        paapi_request_count = 0
+                        paapi_request_window_start = datetime.now()
+
+                        continue  # passa al batch successivo dopo la pausa
+                    else:
+                            # Altri errori API
+                            msg = f"🚫 Errore API su batch {batch}: {error_message}"
+                            print(msg)
+                            write_log(msg)
+                            continue  # passa comunque al prossimo batch
+
 
                 # Processo ogni item nel batch
                 for item in response.items_result.items:
@@ -113,6 +173,7 @@ async def check_products():
                     print("\nOffersV2:\n", item.offers_v2)
                     print("\nListing selezionato (venduto da Amazon):\n", listing)
 
+
                     if listing and "Availability" in listing:
                         availability = listing["Availability"]
                         availability_type = availability.get("Type", "").lower()
@@ -127,11 +188,12 @@ async def check_products():
                     previously_available = was_previously_available(asin)
                     upsert_dynamic_status(asin, available, availability_type, merchant_name)
 
+
                     if available and not previously_available:
                         offering_id = get_offering_id(asin)
 
                         if offering_id in ("None", ""):
-                            data = asyncio.run(scraping_data(asin))
+                            data = await scraping_data(asin)
                             upsert_scraping(asin, data["image_url"], data["price"], data["offering_id"],)
 
                         # PRENDE I DATI STATICI DAL DB
@@ -139,21 +201,23 @@ async def check_products():
                         image, price, detail_page_url, offering_id = get_dynamic_data(asin)
 
                         fast_checkout_link_single = (
-                            f"https://www.amazon.it/gp/checkoutportal/enter-checkout.html/ref=dp_mw_buy_now?"
-                            f"asin={asin}&offeringID={offering_id}&buyNow=1&quantity=1&tag={TAG}"
+                            f"https://www.amazon.it/checkout/entry/buynow?"
+                            f"asin={asin}&offeringID={offering_id}&quantity=1&tag={TAG}"
                         )
 
                         fast_checkout_link_double = (
-                            f"https://www.amazon.it/gp/checkoutportal/enter-checkout.html/ref=dp_mw_buy_now?"
-                            f"asin={asin}&offeringID={offering_id}&buyNow=1&quantity=2&tag={TAG}"
+                            f"https://www.amazon.it/checkout/entry/buynow?"
+                            f"asin={asin}&offeringID={offering_id}&quantity=2&tag={TAG}"
                         )
 
                         msg = (
                             f"<a href='{image}'> </a>"  # link all'immagine per forzare l'anteprima
-                            f"<b>{title}</b>\n\n"
-                            f"<b>Prezzo: {price}</b>\n\n"
+                            f"<b>🇮🇹{title}</b>\n\n"
+                            f"<b>💵 Prezzo: {price}</b>\n\n"
+        
                             f"🔗 <a href='{detail_page_url}'>Pagina prodotto</a>\n"
-                            f"⚡ <a href='{fast_checkout_link_single}'>Acquisto Lampo</a>\n"
+                            f"⚡ <a href='{fast_checkout_link_single}'>Acquisto Lampo</a>\n\n"
+
                             f"Inviate qui i vostri successi @pokedetective  -  #affiliate\n"
                         )
 
@@ -170,16 +234,18 @@ async def check_products():
                             disable_web_page_preview=False, # False per mostrare l'anteprima
                             reply_markup=reply_markup
                         )
-                        print(f"✅ Disponibile ora il prodotto: {asin}\n\n")
+                        print(f"🤖​ Disponibile ora il prodotto: {asin}\n\n")
                     elif not available and previously_available:
                         print(f"\n❌ {asin} non più disponibile\n")
 
+                    
                 print(f"\n⏱️ Tempo risposta PAAPI: \033[35m {end_time - start_time:.2f} \033[0m secondi")
                 print(f"\n⮞ Batch \033[33m {batch} \033[0m completato.\n")
 
-                await asyncio.sleep(2)  # tempo prima della prossima richiesta
+                await asyncio.sleep(3)  # tempo prima del prossimo batch
 
             print("\n✔️ Batch completati.\n\n")
+            #await asyncio.sleep(5)  # tempo prima del prossimo ciclo
 
         except ApiException as e:
             print("\n❌ Errore API:", e)

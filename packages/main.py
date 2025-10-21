@@ -38,7 +38,7 @@ async def error_handler(update, context: ContextTypes.DEFAULT_TYPE):
 
 # Funzione che gestisce l'avvio con retry in caso di NetworkError
 async def run_bot_with_retry():
-    max_retries = 12
+    max_retries = 20
     delay = 5  # secondi
 
     for attempt in range(1, max_retries + 1):
@@ -59,7 +59,6 @@ async def run_bot_with_retry():
             raise
 
 
-# Main
 async def main():
     # Avvia i task paralleli
     asyncio.create_task(check_products())
