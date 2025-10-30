@@ -1,4 +1,4 @@
 @echo off
-cd /d "C:\Users\calci\projects\AmazonBot_DataBaseV3"
+cd /d "%~dp0"
 python .\App\routes.py
 pause
