@@ -56,3 +56,13 @@ Funzioni load_creds(), load_index(), save_index().
 Policy di rotazione: per esempio, cambia cred dopo calls_per_credential = 500 richieste o dopo T minuti.
 Ricreare l’istanza DefaultApi con la credenziale selezionata prima di effettuare la chiamata.
 Se ricevi 429 con una cred, impostare cooldown_until = now + cooldown_seconds e registrarla come temporaneamente esclusa.
+
+
+OK 5) modalità dinamica di polling
+
+Ottimizzare la frequenza delle richieste PAAPI in base ai risultati trovati.
+Il bot fa richieste a intervalli regolari (es. ogni X secondi) per controllare la disponibilità dei prodotti.
+Quando trova almeno un prodotto disponibile, entra in modalità accelerata:
+La frequenza delle richieste aumenta → le chiamate avvengono ogni Y secondi.
+Questa modalità dura 30 minuti (temporizzatore automatico).
+Dopo i 30 minuti, il bot ritorna alla frequenza normale (ogni X secondi).

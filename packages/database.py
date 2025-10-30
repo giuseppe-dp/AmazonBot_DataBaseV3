@@ -102,6 +102,15 @@ def upsert_dynamic_status(asin, available, availability_type, merchant_name):
         conn.commit()
 
 
+def was_previously_available(asin):
+    conn = connect_db()
+    cursor = conn.cursor()
+    cursor.execute("SELECT available FROM dynamic_status WHERE asin = ?", (asin,))
+    result = cursor.fetchone()
+    conn.close()
+    return bool(result and result[0] == 1)
+
+
 def get_asins_from_db():
     conn = connect_db()
     cursor = conn.cursor()
@@ -219,6 +228,19 @@ def upsert_scraping(asin, image_url=None, price=None, offering_id=None):
             cur.execute(sql, params)
 
         conn.commit()
+
+
+def integrity_check():
+    conn = sqlite3.connect("products.db")
+    result = conn.execute("PRAGMA integrity_check;").fetchone()
+    msg = {
+        "\nAvvio un Integrity check del Database...",
+        f"Risultato Check: {result}"
+    }
+    print(msg)
+
+    conn.close()
+
 
 
 if __name__ == '__main__':

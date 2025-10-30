@@ -1,0 +1,46 @@
+[2025-10-28 20:31:11] [ERROR] 🚫 Errore Too Many Requests su batch ['B0FHL1FRN4', 'B0FHL2C2QZ', 'B0FHKC7SF2', 'B0FG7TVSRY', 'B0FQ66WY8F', 'B0FJYK8LNY', 'B0DRVK4S4P', 'B0DRVKR9CT', 'B0DRVLP3SK', 'B0FG7Z5KJQ']. Messa in pausa per 1 ora--> Sono state fatte 35 chiamate PAAPI prima dell'errore.
+[2025-10-28 20:38:07] [INFO] ✅ Reset di 2 prodotti.
+[2025-10-28 21:31:11] [INFO] 🔁 Restart dopo Errore Too Many Requests...
+[2025-10-28 21:31:12] [INFO] 🤖​ Disponibile ora il prodotto: B0FG7XXR6V
+[2025-10-28 21:31:12] [INFO] ⚡ Modalità veloce attivata per 5 minuti.
+[2025-10-28 21:31:16] [INFO] 🤖​ Disponibile ora il prodotto: B0FHL1FRN4
+[2025-10-28 21:31:16] [INFO] 🤖​ Disponibile ora il prodotto: B0FG7Z5KJQ
+[2025-10-28 21:31:16] [INFO] ⚡ Modalità veloce attivata per 5 minuti.
+[2025-10-28 21:36:16] [INFO] 🐢 Ritorno alla modalità normale.
+[2025-10-28 21:38:07] [INFO] ✅ Reset di 3 prodotti.
+[2025-10-28 21:38:13] [INFO] 🤖​ Disponibile ora il prodotto: B0FHL1FRN4
+[2025-10-28 21:38:13] [INFO] 🤖​ Disponibile ora il prodotto: B0FG7Z5KJQ
+[2025-10-28 21:38:13] [INFO] ⚡ Modalità veloce attivata per 5 minuti.
+[2025-10-28 21:38:17] [INFO] 🤖​ Disponibile ora il prodotto: B0FG7XXR6V
+[2025-10-28 21:38:17] [INFO] ⚡ Modalità veloce attivata per 5 minuti.
+[2025-10-28 21:43:18] [INFO] 🐢 Ritorno alla modalità normale.
+[2025-10-28 21:48:07] [INFO] ✅ Reset di 3 prodotti.
+[2025-10-28 21:48:13] [INFO] 🤖​ Disponibile ora il prodotto: B0FG7XXR6V
+[2025-10-28 21:48:13] [INFO] ⚡ Modalità veloce attivata per 5 minuti.
+[2025-10-28 21:48:16] [INFO] 🤖​ Disponibile ora il prodotto: B0FHL1FRN4
+[2025-10-28 21:48:16] [INFO] 🤖​ Disponibile ora il prodotto: B0FG7Z5KJQ
+[2025-10-28 21:48:16] [INFO] ⚡ Modalità veloce attivata per 5 minuti.
+[2025-10-28 21:50:40] [ERROR] 🚫 Errore Too Many Requests su batch ['B0DTQCBW9B', 'B0DRVKS21G', 'B0DRVM5CFW', 'B0DRVKX356', 'B0DK93ZQPC', 'B0DRVKXW3N', 'B0FG7TGW3J', 'B0FG7TB7P4', 'B0FG7XXR6V', 'B0FG7V4M1Z']. Messa in pausa per 1 ora--> Sono state fatte 306 chiamate PAAPI prima dell'errore.
+[2025-10-28 21:58:07] [INFO] ✅ Reset di 3 prodotti.
+[2025-10-28 22:50:40] [INFO] 🔁 Restart dopo Errore Too Many Requests...
+[2025-10-28 22:50:41] [INFO] 🤖​ Disponibile ora il prodotto: B0FHL1FRN4
+[2025-10-28 22:50:41] [INFO] 🤖​ Disponibile ora il prodotto: B0FG7Z5KJQ
+[2025-10-28 22:50:41] [INFO] ⚡ Modalità veloce attivata per 5 minuti.
+[2025-10-28 22:50:44] [INFO] 🤖​ Disponibile ora il prodotto: B0FG7XXR6V
+[2025-10-28 22:50:44] [INFO] ⚡ Modalità veloce attivata per 5 minuti.
+[2025-10-28 22:55:45] [INFO] 🐢 Ritorno alla modalità normale.
+[2025-10-28 22:58:08] [INFO] ✅ Reset di 3 prodotti.
+[2025-10-28 22:58:08] [INFO] 🤖​ Disponibile ora il prodotto: B0FHL1FRN4
+[2025-10-28 22:58:09] [INFO] 🤖​ Disponibile ora il prodotto: B0FG7Z5KJQ
+[2025-10-28 22:58:09] [INFO] ⚡ Modalità veloce attivata per 5 minuti.
+[2025-10-28 22:58:12] [INFO] 🤖​ Disponibile ora il prodotto: B0FG7XXR6V
+[2025-10-28 22:58:12] [INFO] ⚡ Modalità veloce attivata per 5 minuti.
+[2025-10-28 23:03:13] [INFO] 🐢 Ritorno alla modalità normale.
+[2025-10-28 23:08:08] [INFO] ✅ Reset di 3 prodotti.
+[2025-10-28 23:08:09] [INFO] 🤖​ Disponibile ora il prodotto: B0FG7XXR6V
+[2025-10-28 23:08:09] [INFO] ⚡ Modalità veloce attivata per 5 minuti.
+[2025-10-28 23:08:12] [INFO] 🤖​ Disponibile ora il prodotto: B0FHL1FRN4
+[2025-10-28 23:08:12] [INFO] 🤖​ Disponibile ora il prodotto: B0FG7Z5KJQ
+[2025-10-28 23:08:12] [INFO] ⚡ Modalità veloce attivata per 5 minuti.
+[2025-10-28 23:10:19] [ERROR] 🚫 Errore Too Many Requests su batch ['B0DTQCBW9B', 'B0DRVKS21G', 'B0DRVM5CFW', 'B0DRVKX356', 'B0DK93ZQPC', 'B0DRVKXW3N', 'B0FG7TGW3J', 'B0FG7TB7P4', 'B0FG7XXR6V', 'B0FG7V4M1Z']. Messa in pausa per 1 ora--> Sono state fatte 309 chiamate PAAPI prima dell'errore.
+[2025-10-28 23:18:08] [INFO] ✅ Reset di 3 prodotti.

@@ -24,7 +24,7 @@ async def scraping_data(asin: str, domain: str = "amazon.it"):
 
 
         # Cerca il merchant nella pagina
-        m_element = await page.query_selector("#sellerProfileTriggerId")
+        m_element = await page.query_selector("#merchantInfoFeature_feature_div .offer-display-feature-text-message")
         merchant_name = (await m_element.inner_text()).strip().lower() if m_element else ""
 
         # Controlla se è Amazon
