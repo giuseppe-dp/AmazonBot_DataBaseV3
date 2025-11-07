@@ -1,14 +1,22 @@
-from flask import Flask, render_template, request, redirect, url_for, flash
-import sqlite3
-
+from flask import Flask, render_template, request, redirect, url_for, flash, jsonify
 from datetime import datetime, timezone
-
+from pathlib import Path
+import sqlite3
+import json
+import subprocess
+import threading
+import psutil
 
 DB_NAME = "Data/products.db"
+CONFIG_PATH = Path.cwd() / "config.json"
 
 app = Flask(__name__)
+app.secret_key = "supersecret"
 
 
+# ------------------------------
+# 🔧 Utility Functions
+# ------------------------------
 def connect_db():
     conn = sqlite3.connect(DB_NAME)
     conn.execute("PRAGMA foreign_keys = ON")
@@ -16,12 +24,103 @@ def connect_db():
     return conn
 
 
+def load_config():
+    with open(CONFIG_PATH, "r", encoding="utf-8") as f:
+        return json.load(f)
+
+
+def save_config(cfg):
+    with open(CONFIG_PATH, "w", encoding="utf-8") as f:
+        json.dump(cfg, f, indent=2, ensure_ascii=False)
+
+
+# Variabile globale per salvare il processo in esecuzione
+bot_process = None
+
+def run_bot():
+    """Esegue il bot in un thread separato"""
+    global bot_process
+    if bot_process is None or bot_process.poll() is not None:
+        # Avvia il bot come processo separato
+        bot_process = subprocess.Popen(["python", "./packages/main.py"], shell=True)
+        print("✅ Bot avviato con PID:", bot_process.pid)
+    else:
+        print("⚠️ Bot già in esecuzione.")
+
+
+@app.route("/run_bot")
+def run_bot_route():
+    """Endpoint per avviare il bot"""
+    threading.Thread(target=run_bot, daemon=True).start()
+    flash("🤖 Bot avviato in background!", "success")
+    return redirect(url_for("home"))
+
+
+@app.route("/stop_bot")
+def stop_bot_route():
+    """Endpoint per terminare il bot"""
+    global bot_process
+    if bot_process and bot_process.poll() is None:
+        try:
+            parent = psutil.Process(bot_process.pid)
+            for child in parent.children(recursive=True):
+                child.terminate()
+            parent.terminate()
+            bot_process = None
+            flash("🛑 Bot terminato correttamente.", "info")
+        except Exception as e:
+            flash(f"❌ Errore durante l’arresto del bot: {e}", "danger")
+    else:
+        flash("⚠️ Nessun bot in esecuzione.", "warning")
+    return redirect(url_for("home"))
+
+
+@app.route("/status")
+def status():
+    """API per sapere se il bot è in esecuzione"""
+    global bot_process
+    running = bot_process is not None and bot_process.poll() is None
+    return jsonify({"running": running})
+
+        
+
+# ------------------------------
+# 🏠 HOME PAGE (configurazioni)
+# ------------------------------
 @app.route("/")
-def index():
+@app.route("/home")
+def home():
+    cfg = load_config()
+    return render_template('home.html', config=cfg)
+
+@app.route('/update_config', methods=['POST'])
+def update_config():
+	cfg = load_config()
+	cfg["work_start"] = request.form.get("work_start")
+	cfg["work_end"] = request.form.get("work_end")
+	cfg["timezone"] = request.form.get("timezone")
+
+	cfg["boost_duration"] = int(request.form.get("boost_duration"))
+	cfg["normal_interval"] = int(request.form.get("normal_interval"))
+	cfg["boosted_interval"] = int(request.form.get("boosted_interval"))
+
+	cfg["bot_paused"] = "bot_paused" in request.form
+	cfg["scraping_on"] = "scraping_on" in request.form
+
+	cfg["reset_time"] = int(request.form.get("reset_time"))
+
+	save_config(cfg)
+	return redirect(url_for('home'))
+
+
+# ------------------------------
+# 📦 DASHBOARD DATABASE
+# ------------------------------
+@app.route("/dashboard")
+def dashboard():
     conn = connect_db()
     cur = conn.cursor()
 
-    # Join per avere static + dynamic insieme
     cur.execute("""
         SELECT s.asin, s.title, d.image_url, d.price, d.detail_page_url, d.offering_id
         FROM static_data s
@@ -36,10 +135,19 @@ def index():
 
     asins_count = len(products)
     asins_active_count = len(active_asins)
-    
-    return render_template("index.html", products=products, active_asins=active_asins, asins_count=asins_count, asins_active_count=asins_active_count)
+
+    return render_template(
+        "dashboard.html",
+        products=products,
+        active_asins=active_asins,
+        asins_count=asins_count,
+        asins_active_count=asins_active_count
+    )
 
 
+# ------------------------------
+# 🔧 Operazioni sul DB
+# ------------------------------
 @app.route("/add_to_bot/<asin>")
 def add_to_bot(asin):
     conn = connect_db()
@@ -50,7 +158,7 @@ def add_to_bot(asin):
     except sqlite3.IntegrityError:
         pass
     conn.close()
-    return redirect(url_for("index"))
+    return redirect(url_for("dashboard"))
 
 
 @app.route("/remove_from_bot/<asin>")
@@ -60,7 +168,7 @@ def remove_from_bot(asin):
     cur.execute("DELETE FROM bot_asins WHERE asin = ?", (asin,))
     conn.commit()
     conn.close()
-    return redirect(url_for("index"))
+    return redirect(url_for("dashboard"))
 
 
 @app.route("/add_product", methods=["GET", "POST"])
@@ -94,7 +202,7 @@ def add_product():
         conn.commit()
         conn.close()
 
-        return redirect(url_for("index"))
+        return redirect(url_for("dashboard"))
 
     return render_template("add_product.html")
 
@@ -109,7 +217,7 @@ def delete_product(asin):
 
     conn.commit()
     conn.close()
-    return redirect(url_for("index"))
+    return redirect(url_for("dashboard"))
 
 
 @app.route("/edit_dynamic/<asin>", methods=["GET", "POST"])

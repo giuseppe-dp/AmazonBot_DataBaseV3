@@ -1,0 +1,32 @@
+/* === ADD PRODUCT PAGE === */
+
+form {
+  max-width: 500px;
+  margin: 20px auto;
+}
+
+label {
+  margin-top: 10px;
+  font-weight: bold;
+}
+
+input {
+  padding: 8px;
+  margin-top: 5px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+}
+
+button {
+  background: #28a745;
+}
+
+button:hover {
+  background: #218838;
+}
+
+a {
+  display: block;
+  margin-top: 15px;
+  text-align: center;
+}

@@ -1,0 +1,33 @@
+/* === EDIT DYNAMIC PAGE === */
+
+form {
+  max-width: 700px;
+  margin: auto;
+}
+
+label {
+  display: block;
+  margin-top: 10px;
+  font-weight: bold;
+}
+
+input[type="text"] {
+  width: 100%;
+  padding: 8px;
+  margin-top: 5px;
+  box-sizing: border-box;
+}
+
+button {
+  background: #4CAF50;
+}
+
+button:hover {
+  background: #45a049;
+}
+
+a.page {
+  margin: 10px;
+  text-align: center;
+  color: #007bff;
+}

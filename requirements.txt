@@ -5,3 +5,5 @@ python-dotenv
 nest_asyncio
 flask
 playwright
+pytz
+psutil

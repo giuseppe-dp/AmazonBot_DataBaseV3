@@ -2,27 +2,12 @@
 <html lang="it">
 <head>
     <meta charset="UTF-8">
+    <a style=" :hover {background: blue}" href="{{ url_for('home') }}">← Home</a>
     <title>Gestione Database Prodotti</title>
-    <style>
-        table { width: 100%; border-collapse: collapse; margin: 20px 0; }
-        th, td { padding: 8px 12px; border: 1px solid #ccc; text-align: left; }
-        th { background: #eee; }
-        a { padding: 5px 10px; background: #007bff; color: white; text-decoration: none; border-radius: 4px; }
-        a.remove { background: rgba(255, 127, 0, 0.7); }
-        a.remove_asin { background: rgba(255, 0, 0, 0.7); }
-        a.add { padding: 10px 10px; background: none; color: #000000; text-decoration: none; border-radius: 4px; }
-        a.edit { background: rgba(144, 0, 255, 0.7); }
-        a.details { background: rgba(0, 255, 26, 0.7); }
-        .product {
-            margin: 20px;
-            float: right;
-            font-size: 16px;
-            font-weight: bold;
-            color: #444;
-        }
-    </style>
+    <link rel="stylesheet" href="{{ url_for('static', filename='base.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='dashboard.css') }}">
 </head>
-<body>
+<body class="dashboard">
     <h1>
         📦 Gestione Prodotti Amazon
         <span class="product">Prodotti attivi: {{ asins_active_count }}</span>

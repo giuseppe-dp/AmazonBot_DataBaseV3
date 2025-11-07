@@ -3,14 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <title>Dettagli prodotto {{ asin }}</title>
-    <style>
-        body { font-family: Arial, sans-serif; padding: 20px; }
-        h1 { margin-bottom: 10px; }
-        table { border-collapse: collapse; width: 60%; margin-top: 20px; }
-        th, td { border: 1px solid #ccc; padding: 8px; text-align: left; }
-        th { background: #eee; width: 200px; }
-        .back { margin-top: 30px; display: inline-block; text-align: center; text-decoration: none; color: #007bff; }
-    </style>
+    <link rel="stylesheet" href="{{ url_for('static', filename='base.css') }}">
 </head>
 <body>
     <h1>📖 Dettagli Prodotto</h1>
@@ -29,6 +22,6 @@
         <p>❌ Nessun dato trovato</p>
     {% endif %}
 
-    <a class="back" href="{{ url_for('index') }}">⬅️ Torna alla lista</a>
+    <a class="back" href="{{ url_for('dashboard') }}">⬅️ Torna alla lista</a>
 </body>
 </html>

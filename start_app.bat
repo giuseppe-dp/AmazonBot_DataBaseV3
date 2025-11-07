@@ -1,4 +1,4 @@
 @echo off
 cd /d "%~dp0"
-python .\App\routes.py
+python .\App\app.py
 pause

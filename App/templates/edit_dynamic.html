@@ -3,16 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <title>Modifica dati dinamici</title>
-    <style>
-        body { font-family: Arial, sans-serif; margin: 20px; }
-        form { max-width: 700px; margin: auto; }
-        label { display: block; margin-top: 10px; font-weight: bold; }
-        input[type="text"] { width: 100%; padding: 8px; margin-top: 5px; box-sizing: border-box; }
-        button { margin-top: 15px; padding: 10px 16px; background: #4CAF50; color: white; border: none; cursor: pointer; }
-        button:hover { background: #45a049; }
-        .note { font-size: 0.9em; color: #555; margin-top: 8px; }
-        a.page { margin: 10px; text-align: center; text-decoration: none; color: #007bff; }
-    </style>
+    <link rel="stylesheet" href="{{ url_for('static', filename='base.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='edit_dynamic.css') }}">
 </head>
 <body>
     <h2>Modifica dati dinamici per {{ product["asin"] }}</h2>
@@ -36,7 +28,7 @@
     </form>
 
     <p style="text-align:center; margin-top:20px;">
-        <a class="page" href="{{ url_for('index') }}">⬅️ Torna alla lista</a>
+        <a class="page" href="{{ url_for('dashboard') }}">⬅️ Torna alla lista</a>
         <a class="page" href="{{ url_for('show_product', asin=product['asin']) }}">🔎 Vai ai dettagli</a>
     </p>
 </body>

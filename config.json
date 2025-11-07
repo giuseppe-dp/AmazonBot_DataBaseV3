@@ -1,0 +1,11 @@
+{
+  "work_start": "08:20:01",
+  "work_end": "23:27:00",
+  "timezone": "Europe/Rome",
+  "bot_paused": false,
+  "boost_duration": 5,
+  "normal_interval": 5,
+  "boosted_interval": 3,
+  "scraping_on": true,
+  "reset_time": 60
+}

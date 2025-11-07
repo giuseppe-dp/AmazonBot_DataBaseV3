@@ -13,7 +13,7 @@ Usare un wrapper safe_paapi_call() che intercetta ApiException.
 Se riceve 429 → chiamare handle_too_many_requests() che: imposta flag, scrive log, dorme 1 ora, ripristina flag.
 
 
-2) Fasce orarie di lavoro (work slots) — dorme fuori fascia, lavora dentro fascia
+OK 2) Fasce orarie di lavoro (work slots) — dorme fuori fascia, lavora dentro fascia
 
 Cosa fare:
 Aggiungere una configurazione con work_start e work_end (es. "08:00", "20:00") e un controllo che, all’inizio di ogni ciclo, verifichi se l’orario corrente è dentro la fascia.
@@ -33,11 +33,11 @@ Testare fasce che passano la mezzanotte (es. 22:00–06:00).
 
 3) Interfaccia web e DB su stesso Raspberry
 
-Cosa deve fare la web UI
+Cosa deve fare la web UI Home
 La pagina/pulsanti devono poter:
-Avviare/fermare il bot (systemd service o task process locale).
-Eseguire manutenzioni sul DB SQLite.
-Mostrare lo stato attuale (bot running / bot stopped, DB size, last backup time).
+Avviare/fermare il bot (bot_paused = bool).
+Eseguire manutenzioni sul DB SQLite andando alla pagina web corrispondente (index.html).
+Mostrare lo stato config attuale (bot_paused, scraping_on, work_start, work_end....).
 
 Permessi e utente:
 eseguire bot e webserver come lo stesso utente o garantire che entrambi abbiano gli stessi permessi sul file DB.

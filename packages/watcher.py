@@ -28,6 +28,8 @@ from scraping import scraping_data
 
 from logger_config import paapi_logger, bot_logger
 
+from config_manager import in_work_window, seconds_to_next_start, load_config, is_paused, wait_until_ready
+
 load_dotenv()
 
 BOT_TOKEN = os.getenv("BOT_TOKEN")
@@ -49,17 +51,11 @@ default_api = DefaultApi(
 )
 
 
-def chunk_list(lst, n):
-    # Divide una lista in sottoliste da massimo n elementi.
-    for i in range(0, len(lst), n):
-        yield lst[i:i+n]  # return parziale per ogni batch
-
-
 # - CONTATORE RICHIESTE PAAPI -
 paapi_request_count = 0
 paapi_request_window_start = datetime.now()
 
-async def safe_paapi_request(batch, tag, merchant="Amazon", marketplace="www.amazon.it"):
+async def safe_paapi_request(batch, tag=TAG, merchant="Amazon", marketplace="www.amazon.it"):
 
     """
     Esegue una chiamata PAAPI per un batch di ASIN.
@@ -237,6 +233,12 @@ async def merchant_check(item):
     return previously_available, available
 
 
+def chunk_list(lst, n):
+    # Divide una lista in sottoliste da massimo n elementi.
+    for i in range(0, len(lst), n):
+        yield lst[i:i+n]  # return parziale per ogni batch
+
+
 async def check_products():
 
     """ 
@@ -246,13 +248,15 @@ async def check_products():
     """
 
     # Variabili per il boost
-    normal_interval = 5    # quando nessun prodotto trovato
-    boosted_interval = 3   # quando trova disponibilità
-    boost_duration = 5     # minuti
     boost_active = False
     boost_start_time = None
 
     while True:
+
+        cfg = load_config() # Inizializzazione dei parametri del sistema da config.json
+
+        await wait_until_ready()  # Controlla pausa e orari prima di ogni ciclo
+
         try:
             asins = get_active_asins()
             if not asins:
@@ -267,7 +271,7 @@ async def check_products():
                 found_available = False  # flag per capire se attivare il boost
 
                 start_time = perf_counter()
-                response = await safe_paapi_request(batch, TAG) # richiesta paapi
+                response = await safe_paapi_request(batch) # richiesta paapi
                 end_time = perf_counter()
 
                 if not response:
@@ -285,13 +289,14 @@ async def check_products():
 
                         offering_id = get_offering_id(asin)
 
-                        if offering_id in ("None", ""):
+                        if offering_id in ("None", "") and cfg["scraping_on"]:
                             data = await scraping_data(asin)
                             upsert_scraping(asin, data["image_url"], data["price"], data["offering_id"],)
                             if data["offering_id"] in ("None", ""):
                                 upsert_dynamic_status(asin, False, None, None)
 
-                        await send_message(asin) # invio il messaggio su telegram
+                        if offering_id not in ("None", ""):
+                            await send_message(asin) # invio il messaggio su telegram se c'è offering_id
 
                         msg = f"🤖​ Disponibile ora il prodotto: {asin}"
                         paapi_logger.info(msg)
@@ -308,17 +313,17 @@ async def check_products():
                 if found_available:
                     boost_active = True
                     boost_start_time = datetime.now()
-                    paapi_logger.info(f"⚡ Modalità veloce attivata per {boost_duration} minuti.")
+                    paapi_logger.info(f"⚡ Modalità veloce attivata per {cfg["boost_duration"]} minuti.")
 
                 elif boost_active:
                     elapsed = (datetime.now() - boost_start_time).total_seconds()
-                    print(f"\nBoost attivo per {(boost_duration*60)-elapsed} secondi.")
+                    print(f"\nBoost attivo per {(cfg["boost_duration"]*60)-elapsed} secondi.")
 
-                    if elapsed > (boost_duration*60):
+                    if elapsed > (cfg["boost_duration"]*60):
                         boost_active = False
                         paapi_logger.info("🐢 Ritorno alla modalità normale.")
 
-                interval = boosted_interval if boost_active else normal_interval
+                interval = cfg["boosted_interval"] if boost_active else cfg["normal_interval"]
                 print(f"\n⏱️ Attesa di {interval} secondi prima del prossimo ciclo...\n")
                 await asyncio.sleep(interval)
 
@@ -328,7 +333,6 @@ async def check_products():
             print("\n❌ check_products:", e)
 
 
-reset_time = 10 * 60  # ogni 10 minuti
 async def auto_reset():
 
     """
@@ -336,6 +340,8 @@ async def auto_reset():
     """
 
     while True:
+        cfg = load_config()
+        reset_time = cfg["reset_time"] * 60  # ogni tot minuti
         await asyncio.sleep(reset_time)
         try:
             now = datetime.now(timezone.utc).isoformat()

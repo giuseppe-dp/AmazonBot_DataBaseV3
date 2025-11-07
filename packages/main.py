@@ -68,7 +68,7 @@ async def run_bot_with_retry():
 
     for attempt in range(1, max_retries + 1):
         try:
-            bot_logger.info("🚀 Avvio bot... (tentativo %d)", attempt)
+            bot_logger.info("Avvio telegram... (tentativo %d)", attempt)
             await app.run_polling()
             break
         except NetworkError as e:
