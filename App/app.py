@@ -6,6 +6,7 @@ import json
 import subprocess
 import threading
 import psutil
+import os
 
 DB_NAME = "Data/products.db"
 CONFIG_PATH = Path.cwd() / "config.json"
@@ -15,7 +16,7 @@ app.secret_key = "supersecret"
 
 
 # ------------------------------
-# 🔧 Utility Functions
+# Utility Functions
 # ------------------------------
 def connect_db():
     conn = sqlite3.connect(DB_NAME)
@@ -85,7 +86,7 @@ def status():
         
 
 # ------------------------------
-# 🏠 HOME PAGE (configurazioni)
+# HOME PAGE (configurazioni)
 # ------------------------------
 @app.route("/")
 @app.route("/home")
@@ -114,7 +115,7 @@ def update_config():
 
 
 # ------------------------------
-# 📦 DASHBOARD DATABASE
+# DASHBOARD DATABASE
 # ------------------------------
 @app.route("/dashboard")
 def dashboard():
@@ -146,7 +147,7 @@ def dashboard():
 
 
 # ------------------------------
-# 🔧 Operazioni sul DB
+# Operazioni sul DB
 # ------------------------------
 @app.route("/add_to_bot/<asin>")
 def add_to_bot(asin):
@@ -302,7 +303,38 @@ def show_product(asin):
 
     conn.close()
     return render_template("show_product.html", asin=asin, product=product)
- 
+
+# ------------------------------
+# Logs
+# ------------------------------
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))  # => App/
+ROOT_DIR = os.path.dirname(BASE_DIR)                   # => progetto/
+LOG_DIR = os.path.join(ROOT_DIR, "log")
+
+@app.route("/logs")
+def logs():
+    bot_log_path = os.path.join(LOG_DIR, "bot.log")
+    paapi_log_path = os.path.join(LOG_DIR, "paapi.log")
+
+    bot_log = ""
+    paapi_log = ""
+
+    try:
+        with open(bot_log_path, "r", encoding="utf-8") as f:
+            bot_log = f.read()
+    except FileNotFoundError:
+        bot_log = "bot.log non trovato."
+
+    try:
+        with open(paapi_log_path, "r", encoding="utf-8") as f:
+            paapi_log = f.read()
+    except FileNotFoundError:
+        paapi_log = "paapi.log non trovato."
+
+    return render_template("logs.html", bot_log=bot_log, paapi_log=paapi_log)
+
+
+
 
 if __name__ == "__main__":
     app.run(debug=True)

@@ -31,17 +31,13 @@ Cosa controllare / test:
 Testare fasce che passano la mezzanotte (es. 22:00–06:00).
 
 
-3) Interfaccia web e DB su stesso Raspberry
+OK 3) Interfaccia web e DB su stesso Raspberry
 
 Cosa deve fare la web UI Home
 La pagina/pulsanti devono poter:
 Avviare/fermare il bot (bot_paused = bool).
 Eseguire manutenzioni sul DB SQLite andando alla pagina web corrispondente (index.html).
 Mostrare lo stato config attuale (bot_paused, scraping_on, work_start, work_end....).
-
-Permessi e utente:
-eseguire bot e webserver come lo stesso utente o garantire che entrambi abbiano gli stessi permessi sul file DB.
-evitare che webserver operi come root.
 
 
 4) Rotazione di più chiavi/tag affiliati (uno alla volta, non in parallelo)

@@ -1,5 +1,6 @@
-[2025-11-06 09:20:18] [INFO] Avvio telegram... (tentativo 1)
-[2025-11-06 09:20:19] [INFO] Application started
-[2025-11-06 13:20:26] [WARNING] ⚠️ Errore di rete durante l'invio del messaggio Telegram, pausa di 60 secondi: Timed out
-[2025-11-06 18:38:02] [WARNING] ⚠️ Errore di rete durante l'invio del messaggio Telegram, pausa di 60 secondi: Timed out
-[2025-11-06 23:42:34] [INFO] 🌙 Fuori orario di lavoro, dormo per 8h 37m 26s...
+[2025-12-01 19:15:13] [INFO] Avvio telegram... (tentativo 1)
+[2025-12-01 19:15:14] [INFO] Application started
+[2025-12-01 19:31:17] [ERROR] ❌ Errore Telegram non gestito: httpx.ReadError: 
+NoneType: None
+[2025-12-01 19:31:18] [WARNING] 🌐 Errore di connessione Telegram (getaddrinfo failed).
+[2025-12-01 19:31:18] [INFO] 🔁 Riprovo tra 60 secondi...
