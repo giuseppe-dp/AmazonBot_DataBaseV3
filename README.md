@@ -26,7 +26,7 @@ Il sistema verifica continuamente una lista di ASIN personalizzata. Appena rilev
 Essendo basato interamente su Python asincrono (`asyncio`), il progetto è estremamente ottimizzato per il networking I/O. Questo lo rende il candidato perfetto per girare H24 in locale su dispositivi a basso consumo, come un Raspberry Pi o un server domestico. 
 
 È sufficiente preparare un ambiente virtuale isolato (`python3 -m venv venv`), installare le dipendenze, e il bot gestirà autonomamente problemi di disconnessione, rate-limiting (Too Many Requests) o drop di rete senza mai crashare, grazie a una robusta logica di retry.
-## Importante ==> Bisogna creare un file env. con i seguenti parametri: (Senza delle key valide il Bot non funziona!) 
+## Importante ==> Bisogna creare un file .env con i seguenti parametri: (Senza delle key valide il Bot non funziona!) 
   * BOT_TOKEN=
   * ACCESS_KEY=
   * SECRET_KEY=
