@@ -1,50 +1,5 @@
 # 🛒 Amazon Restock Tracker & Telegram Notifier
 
-Questo progetto è un sistema automatizzato ad alte prestazioni nato per monitorare la disponibilità di prodotti molto richiesti su Amazon (come i set di carte collezionabili) e notificare istantaneamente una community su Telegram.
-
-## 🎯 Scopo del Progetto
-L'obiettivo principale è fornire un vantaggio temporale durante i "drop" di prodotti difficili da trovare. Quando un articolo torna disponibile ed è venduto ufficialmente da Amazon, il tempo di reazione è tutto. 
-
-Il sistema verifica continuamente una lista di ASIN personalizzata. Appena rileva un ritorno in stock, invia un alert formattato su Telegram contenente dettagli, prezzo e, soprattutto, link di **Acquisto Lampo (Fast Checkout)**. Questi link bypassano i normali passaggi del carrello, permettendo l'acquisto in 1-click.
-
-## 🌟 Come Funziona (Le Feature Principali)
-
-* **Pannello di Controllo Web (Dashboard):** Il sistema è dotato di un'interfaccia UI completa per gestire le operazioni senza toccare il codice. Dalla dashboard è possibile:
-  * Avviare/Fermare il bot e impostare specifiche fasce orarie di lavoro.
-  * Aggiungere, rimuovere o sospendere i prodotti (ASIN) dal ciclo di monitoraggio.
-  * Regolare i tempi di latenza e visualizzare i log di sistema in tempo reale.
-
-* **Modalità "Boost" Dinamica (Smart Polling):** Il cuore strategico del bot. Durante i periodi di calma, il sistema effettua controlli a intervalli regolari. Tuttavia, appena viene rilevato un restock su un qualsiasi prodotto, il bot entra automaticamente in "Boost Mode": riduce drasticamente i secondi di attesa tra un ciclo e l'altro per intercettare le classiche "ondate" di restock ravvicinate tipiche di Amazon, per poi tornare alla normalità a fine evento.
-
-* **Doppio Motore di Ricerca (API + Scraping):**
-  * *Motore Primario:* Utilizza le API ufficiali (Amazon PAAPI v5) per controlli massivi, veloci e a basso consumo di risorse.
-  * *Motore Secondario (Fallback):* Qualora le API non restituiscano l'`offering_id` (il codice vitale per generare il link di Fast Checkout), il bot attiva un browser invisibile (tramite Playwright) per navigare fisicamente sulla pagina Amazon ed estrarre il dato direttamente dal codice HTML.
-
-* **Database Locale Relazionale:** Sfrutta SQLite per mantenere uno storico accurato. Memorizza non solo l'anagrafica dei prodotti, ma traccia anche le variazioni di stato (disponibilità e prezzi), gestendo in autonomia i reset periodici delle cache.
-
-## 🛠️ Architettura e Deploy Locale
-Essendo basato interamente su Python asincrono (`asyncio`), il progetto è estremamente ottimizzato per il networking I/O. Questo lo rende il candidato perfetto per girare H24 in locale su dispositivi a basso consumo, come un Raspberry Pi o un server domestico. 
-
-È sufficiente preparare un ambiente virtuale isolato (`python3 -m venv venv`), installare le dipendenze, e il bot gestirà autonomamente problemi di disconnessione, rate-limiting (Too Many Requests) o drop di rete senza mai crashare, grazie a una robusta logica di retry.
-## Importante ==> Bisogna creare un file .env con i seguenti parametri: (Senza delle key valide il Bot non funziona!) 
-  * BOT_TOKEN=
-  * ACCESS_KEY=
-  * SECRET_KEY=
-  * TAG=
-  * CHAT_ID=
-
-## 📂 Componenti Principali
-* `main.py`: Il demone principale che avvia il listener Telegram e lancia i task di background in parallelo.
-* `watcher.py`: L'algoritmo centrale. Effettua le chiamate batch, valuta la disponibilità dei prodotti, calcola le temporizzazioni del Boost e formatta i messaggi per Telegram.
-* `scraping.py`: Il modulo di emergenza per l'estrazione dati dal DOM (Data Object Model) della pagina.
-* `database.py`: Il layer di persistenza dati che esegue le query per aggiornare lo stato degli ASIN.
-* `App`: La cartella contenente l'intera interfaccia Web.
-
-## 🚧 Work in Progress / Known Issues
-* **Ottimizzazione Asyncio (In corso):**
-
-# 🛒 Amazon Restock Tracker & Telegram Notifier
-
 This project is a high-performance automated system designed to monitor the availability of highly sought-after products on Amazon (such as trading card sets) and instantly notify a Telegram community.
 
 ## 🎯 Project Purpose
@@ -88,3 +43,49 @@ Simply prepare an isolated virtual environment (`python3 -m venv venv`), install
 
 ## 🚧 Work in Progress / Known Issues
 * **Asyncio Optimization (Ongoing):**
+
+
+# 🛒 Amazon Restock Tracker & Telegram Notifier
+
+Questo progetto è un sistema automatizzato ad alte prestazioni nato per monitorare la disponibilità di prodotti molto richiesti su Amazon (come i set di carte collezionabili) e notificare istantaneamente una community su Telegram.
+
+## 🎯 Scopo del Progetto
+L'obiettivo principale è fornire un vantaggio temporale durante i "drop" di prodotti difficili da trovare. Quando un articolo torna disponibile ed è venduto ufficialmente da Amazon, il tempo di reazione è tutto. 
+
+Il sistema verifica continuamente una lista di ASIN personalizzata. Appena rileva un ritorno in stock, invia un alert formattato su Telegram contenente dettagli, prezzo e, soprattutto, link di **Acquisto Lampo (Fast Checkout)**. Questi link bypassano i normali passaggi del carrello, permettendo l'acquisto in 1-click.
+
+## 🌟 Come Funziona (Le Feature Principali)
+
+* **Pannello di Controllo Web (Dashboard):** Il sistema è dotato di un'interfaccia UI completa per gestire le operazioni senza toccare il codice. Dalla dashboard è possibile:
+  * Avviare/Fermare il bot e impostare specifiche fasce orarie di lavoro.
+  * Aggiungere, rimuovere o sospendere i prodotti (ASIN) dal ciclo di monitoraggio.
+  * Regolare i tempi di latenza e visualizzare i log di sistema in tempo reale.
+
+* **Modalità "Boost" Dinamica (Smart Polling):** Il cuore strategico del bot. Durante i periodi di calma, il sistema effettua controlli a intervalli regolari. Tuttavia, appena viene rilevato un restock su un qualsiasi prodotto, il bot entra automaticamente in "Boost Mode": riduce drasticamente i secondi di attesa tra un ciclo e l'altro per intercettare le classiche "ondate" di restock ravvicinate tipiche di Amazon, per poi tornare alla normalità a fine evento.
+
+* **Doppio Motore di Ricerca (API + Scraping):**
+  * *Motore Primario:* Utilizza le API ufficiali (Amazon PAAPI v5) per controlli massivi, veloci e a basso consumo di risorse.
+  * *Motore Secondario (Fallback):* Qualora le API non restituiscano l'`offering_id` (il codice vitale per generare il link di Fast Checkout), il bot attiva un browser invisibile (tramite Playwright) per navigare fisicamente sulla pagina Amazon ed estrarre il dato direttamente dal codice HTML.
+
+* **Database Locale Relazionale:** Sfrutta SQLite per mantenere uno storico accurato. Memorizza non solo l'anagrafica dei prodotti, ma traccia anche le variazioni di stato (disponibilità e prezzi), gestendo in autonomia i reset periodici delle cache.
+
+## 🛠️ Architettura e Deploy Locale
+Essendo basato interamente su Python asincrono (`asyncio`), il progetto è estremamente ottimizzato per il networking I/O. Questo lo rende il candidato perfetto per girare H24 in locale su dispositivi a basso consumo, come un Raspberry Pi o un server domestico. 
+
+È sufficiente preparare un ambiente virtuale isolato (`python3 -m venv venv`), installare le dipendenze, e il bot gestirà autonomamente problemi di disconnessione, rate-limiting (Too Many Requests) o drop di rete senza mai crashare, grazie a una robusta logica di retry.
+## Importante ==> Bisogna creare un file .env con i seguenti parametri: (Senza delle key valide il Bot non funziona!) 
+  * BOT_TOKEN=
+  * ACCESS_KEY=
+  * SECRET_KEY=
+  * TAG=
+  * CHAT_ID=
+
+## 📂 Componenti Principali
+* `main.py`: Il demone principale che avvia il listener Telegram e lancia i task di background in parallelo.
+* `watcher.py`: L'algoritmo centrale. Effettua le chiamate batch, valuta la disponibilità dei prodotti, calcola le temporizzazioni del Boost e formatta i messaggi per Telegram.
+* `scraping.py`: Il modulo di emergenza per l'estrazione dati dal DOM (Data Object Model) della pagina.
+* `database.py`: Il layer di persistenza dati che esegue le query per aggiornare lo stato degli ASIN.
+* `App`: La cartella contenente l'intera interfaccia Web.
+
+## 🚧 Work in Progress / Known Issues
+* **Ottimizzazione Asyncio (In corso):**
