@@ -40,6 +40,9 @@ Essendo basato interamente su Python asincrono (`asyncio`), il progetto è estre
 * `database.py`: Il layer di persistenza dati che esegue le query per aggiornare lo stato degli ASIN.
 * `App`: La cartella contenente l'intera interfaccia Web.
 
+## 🚧 Work in Progress / Known Issues
+* **Ottimizzazione Asyncio (In corso):**
+
 # 🛒 Amazon Restock Tracker & Telegram Notifier
 
 This project is a high-performance automated system designed to monitor the availability of highly sought-after products on Amazon (such as trading card sets) and instantly notify a Telegram community.
@@ -82,3 +85,6 @@ Simply prepare an isolated virtual environment (`python3 -m venv venv`), install
 * `scraping.py`: The emergency module for extracting data from the page's DOM (Document Object Model).
 * `database.py`: The data persistence layer that executes queries to update the status of ASINs.
 * `App`: The folder containing the entire Web interface.
+
+## 🚧 Work in Progress / Known Issues
+* **Asyncio Optimization (Ongoing):**
